@@ -1,0 +1,72 @@
+language: cpp
+
+os:
+  - linux
+
+dist: trusty
+sudo: required
+
+compiler:
+  - clang
+  - gcc
+
+env:
+  matrix:
+    - CONFIG=Release
+    - CONFIG=Debug
+
+matrix:
+  exclude:
+    - os: osx
+      compiler: gcc
+
+#notifications:
+#   email:
+#    on_success: change
+#    on_failure: always
+
+before_install:
+  - |
+    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+      sudo add-apt-repository -y ppa:samuel-bachmann/pcl-boost1.60
+      sudo apt-get update -qq
+    else
+      brew update
+    fi
+
+install:
+  - THIRD_DIR="$TRAVIS_BUILD_DIR/3rd"
+  - |
+    if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+      sudo apt-get -qq install -y unzip boost1.60 libbsd-dev
+      mkdir $THIRD_DIR
+      cd $THIRD_DIR
+      wget --no-check-certificate --quiet https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.tar.gz
+      tar -xzf cmake-3.7.2-Linux-x86_64.tar.gz
+      export PATH=$THIRD_DIR/cmake-3.7.2-Linux-x86_64/bin:$PATH
+      wget --no-check-certificate --quiet https://github.com/log4cplus/log4cplus/archive/REL_1_2_0.zip
+      unzip -q REL_1_2_0.zip
+      cd log4cplus-REL_1_2_0 && mkdir build && cd build
+      cmake -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_CXX_FLAGS="-std=c++11" -DLOG4CPLUS_BUILD_TESTING=OFF -DLOG4CPLUS_BUILD_LOGGINGSERVER=OFF ..
+      make && sudo make install && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
+      cd $THIRD_DIR
+      mkdir otl && cd otl && wget -q http://otl.sourceforge.net/otlv4_h2.zip && unzip -q otlv4_h2.zip
+      cd $TRAVIS_BUILD_DIR
+    else
+      brew upgrade cmake || brew install cmake
+      brew install boost log4cplus
+      mkdir $THIRD_DIR && cd $THIRD_DIR
+      curl -O https://github.com/JackieXie168/libbsd/archive/0.8.3-macosx.zip
+      unzip -q 0.8.3-macosx.zip
+      cd libbsd-0.8.3-macosx
+      ./autogen && ./configure && make && make install
+    fi
+  - cmake --version
+
+before_script:
+  - mkdir build
+  - cd ./build
+  - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="-D BOOST_TEST_DYN_LINK" -DCMAKE_BUILD_TYPE=$CONFIG ..
+
+script:
+  - cmake --build . && cd ./bin && ./UtilsTest --color_output=y

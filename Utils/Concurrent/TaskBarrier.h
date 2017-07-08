@@ -4,10 +4,10 @@
 #include <atomic>
 #include "BlackMagics.h"
 
-template<typename BlackMagicType = BlackMagicFuncPtr, BlackMagicType Func> class TaskBarrier
+template<typename BlackMagicType = BlackMagicFuncPtr, BlackMagicType Func = DefaultBlackMagicFunc> class TaskBarrier
 {
 public:
-	TaskBarrier(unsigned int taskCount, BlackMagicType func = DefaultBlackMagicFunc) :m_taskCount(taskCount), m_finishedCount(0), m_func(func)
+	TaskBarrier(unsigned int taskCount) :m_taskCount(taskCount), m_finishedCount(0)
 	{
 	}
 
@@ -41,8 +41,6 @@ private:
 	unsigned int m_taskCount;
 
 	std::atomic<unsigned int> m_finishedCount;
-
-	BlackMagicType m_func;
 };
 
 #endif /* TASKBARRIER_H */

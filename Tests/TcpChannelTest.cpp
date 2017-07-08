@@ -4,15 +4,20 @@
 #include "Channel/Tcp/TcpV4Channel.h"
 #include "Channel/Tcp/TcpV4PassiveChannel.h"
 #include "Buffer/CircularBuffer.h"
+#include "Concurrent/TaskBarrier.h"
 
 SpinLock<> GlobalAssertLock;
+
+TaskBarrier<> GlobalBarrier(2);
 
 BOOST_AUTO_TEST_SUITE(TcpChannelTest)
 
 	class MonkHandler :public std::enable_shared_from_this<MonkHandler>, public IAsyncChannelHandler
 	{
 	public:
-		IAsyncChannel *m_channel = nullptr;
+		static std::shared_ptr<MonkHandler> TestSession;
+
+		IAsyncChannel::ptr_t m_channel;
 
 		std::shared_ptr<CircularBuffer> m_readBuf{ new CircularBuffer(512) };
 
@@ -70,6 +75,7 @@ BOOST_AUTO_TEST_SUITE(TcpChannelTest)
 		virtual void EndClose(const boost::system::error_code &err) override
 		{
 			SpinLock<>::ScopeLock lock(GlobalAssertLock);
+			GlobalBarrier.IncFinishedCount(1);
 			BOOST_TEST(!err, "MonkHandler EndClose called,message:" << err.message());
 		}
 	};
@@ -141,9 +147,12 @@ public:
 	virtual void EndClose(const boost::system::error_code &err) override
 	{
 		SpinLock<>::ScopeLock lock(GlobalAssertLock);
+		GlobalBarrier.IncFinishedCount(1);
 		BOOST_TEST(!err, "MonkSrvHandler EndClose called,message:" << err.message() << "\n");
 	}
 };
+
+std::shared_ptr<MonkHandler> MonkHandler::TestSession;
 
 std::shared_ptr<MonkSrvHandler> MonkSrvHandler::TestSession;
 
@@ -173,12 +182,13 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 	ThreadPool::Instance().QueueWorkItem(Do);
 	IAsyncChannel::ptr_t channel(new TcpV4Channel("127.0.0.1", 8001));
 	IAsyncChannelHandler::ptr_t monkObj(new MonkHandler());
-	static_cast<MonkHandler*>(monkObj.get())->m_channel = channel.get();
+	MonkHandler::TestSession = std::dynamic_pointer_cast<MonkHandler>(monkObj);
+	static_cast<MonkHandler*>(monkObj.get())->m_channel = channel;
 	channel->AsyncOpen(monkObj);
-	boost::this_thread::sleep(boost::posix_time::seconds(5));
+	GlobalBarrier.WaitAllFinished();
 
+	MonkHandler::TestSession.reset();
 	MonkSrvHandler::TestSession.reset();
-	channel.reset();
 	ThreadPool::Stop();
 	TcpV4Listener::Destory();
 	ThreadPool::Destory();

@@ -180,16 +180,14 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 		});
 
 	ThreadPool::Instance().QueueWorkItem(Do);
-	IAsyncChannel::ptr_t channel(new TcpV4Channel("127.0.0.1", 8001));
-	IAsyncChannelHandler::ptr_t monkObj(new MonkHandler());
-	MonkHandler::TestSession = std::dynamic_pointer_cast<MonkHandler>(monkObj);
-	static_cast<MonkHandler*>(monkObj.get())->m_channel = channel;
-	channel->AsyncOpen(monkObj);
+	MonkHandler::TestSession.reset(new MonkHandler());
+	static_cast<MonkHandler*>(MonkHandler::TestSession.get())->m_channel.reset(new TcpV4Channel("127.0.0.1", 8001));
+	static_cast<MonkHandler*>(MonkHandler::TestSession.get())->m_channel->AsyncOpen(MonkHandler::TestSession);
 	GlobalBarrier.WaitAllFinished();
 
+	ThreadPool::Stop();
 	MonkHandler::TestSession.reset();
 	MonkSrvHandler::TestSession.reset();
-	ThreadPool::Stop();
 	TcpV4Listener::Destory();
 	ThreadPool::Destory();
 }

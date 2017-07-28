@@ -8,7 +8,7 @@
 
 SpinLock<> GlobalAssertLock;
 
-TaskBarrier<> GlobalBarrier(2);
+TaskBarrier<> GlobalBarrier(0);
 
 BOOST_AUTO_TEST_SUITE(TcpChannelTest)
 
@@ -179,6 +179,8 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 			{ boost::asio::ip::address_v4::from_string("0.0.0.0"),8002 }
 		});
 
+	GlobalBarrier.ResetTaskCount(2);
+	GlobalBarrier.Reset();
 	ThreadPool::Instance().QueueWorkItem(Do);
 	MonkHandler::TestSession.reset(new MonkHandler());
 	static_cast<MonkHandler*>(MonkHandler::TestSession.get())->m_channel.reset(new TcpV4Channel("127.0.0.1", 8001));

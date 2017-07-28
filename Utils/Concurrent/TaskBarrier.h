@@ -19,9 +19,14 @@ public:
 
 	TaskBarrier& operator=(TaskBarrier&&) = delete;
 
+	void ResetTaskCount(unsigned int count)
+	{
+		m_taskCount.exchange(count, std::memory_order_acquire);
+	}
+
 	void Reset()
 	{
-		m_finishedCount.store(0, std::memory_order_acq_rel);
+		m_finishedCount.exchange(0, std::memory_order_acquire);
 	}
 
 	void IncFinishedCount(unsigned int count)
@@ -31,14 +36,14 @@ public:
 
 	void WaitAllFinished()
 	{
-		for (unsigned k = 0; m_finishedCount.load(std::memory_order_acquire) < m_taskCount; ++k)
+		for (unsigned k = 0; m_finishedCount.load(std::memory_order_acquire) < m_taskCount.load(std::memory_order_relaxed); ++k)
 		{
 			Func(k);
 		}
 	}
 
 private:
-	unsigned int m_taskCount;
+	std::atomic<unsigned int> m_taskCount;
 
 	std::atomic<unsigned int> m_finishedCount;
 };

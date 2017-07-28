@@ -244,7 +244,7 @@ bool operator<(const CircularBuffer &lhs, const CircularBuffer &rhs)
 	{
 		return false;
 	}
-	for (int i = 0; i < lhs.size(); ++i)
+	for (CircularBuffer::size_type i = 0; i < lhs.size(); ++i)
 	{
 		us8 lVal = lhs[i];
 		us8 rVal = rhs[i];

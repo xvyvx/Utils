@@ -11,6 +11,8 @@ public:
 
 	static const std::string& AppExecutablePath();
 
+	static bool IsAbsolutePath(const char *path, size_t size);
+
 	//传入的可变参数后必须有一个空指针（0）表示结束
 	static void Combine(std::string *result,...);
 };

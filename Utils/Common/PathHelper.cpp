@@ -99,6 +99,11 @@ void InitPathStrings()
 	}
 }
 
+bool PathHelper::IsAbsolutePath(const char *path, size_t size)
+{
+	return size >= 3 && path[1] == ':' && path[2] == FILE_SYSTEM_SEPARATOR_CHAR;
+}
+
 #elif defined(IS_UNIX)
 
 #include <unistd.h>
@@ -133,6 +138,11 @@ void InitPathStrings()
 		AppDeployPathStr.clear();
 		AppExecutablePathStr.clear();
 	}
+}
+
+bool PathHelper::IsAbsolutePath(const char *path, size_t size)
+{
+	return size >= 1 && path[0] == FILE_SYSTEM_SEPARATOR_CHAR;
 }
 
 #else

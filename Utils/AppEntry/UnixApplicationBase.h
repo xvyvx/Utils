@@ -69,11 +69,9 @@ private:
 
 	int RunNormal();
 
-	bool Initialize(int argc, char *argv[]);
+	bool Initialize();
 
 	static void SignalHandler(int sigNum);
-
-	int RedirectStream();
 
 	static bool WriteFile(const std::string &content, const std::string &path);
 
@@ -106,7 +104,7 @@ private:
 
 	pidfh *m_pidFile;
 
-	WaitEvent m_evt;
+	std::unique_ptr<WaitEvent> m_evt;
 
 	std::string m_serviceName;
 
@@ -152,11 +150,8 @@ template<typename T, T *Proc> ApplicationBase<T, Proc>::~ApplicationBase()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::Run(int argc, char *argv[])
 {
-	if (!Initialize(argc, argv))
-	{
-		return 1;
-	}
-
+	boost::program_options::store(boost::program_options::parse_command_line(argc, argv, m_optionsDesc), m_vm);
+	boost::program_options::notify(m_vm);
 	bool hitted = false;
 	int ret = 0;
 	for (size_t i = 0; i < EntrySize; ++i)
@@ -177,6 +172,10 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::Run(int argc, char *
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 {
+	if (!Initialize())
+	{
+		return 1;
+	}
 	if (!m_evt)
 	{
 		LOG4CPLUS_ERROR(log, "创建控制事件失败。");
@@ -186,7 +185,7 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 	m_reporter.reset(new NullReport());
 	if (Proc->Startup(*m_reporter, m_vm, log))
 	{
-		m_evt.Wait();
+		m_evt->Wait();
 		Proc->Exit(*m_reporter, log);
 	}
 	else
@@ -199,17 +198,21 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvc()
 {
+	if (daemon(1, 0) != 0)
+	{
+		return 1;
+	}
+	if (!Initialize())
+	{
+		return 2;
+	}
 	if (!m_evt)
 	{
 		LOG4CPLUS_ERROR(log, "创建控制事件失败。");
-		return 1;
-	}
-	int ret = RedirectStream();
-	if (ret != 0)
-	{
-		return ret;
+		return 2;
 	}
 
+	int ret = 0;
 	std::string pidFilePath("/var/run/");
 	pidFilePath.append(m_serviceName);
 	pidFilePath.append(".pid");
@@ -240,7 +243,7 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvc()
 		m_reporter.reset(new NullReport());
 		if (Proc->Startup(*m_reporter, m_vm, log))
 		{
-			m_evt.Wait();
+			m_evt->Wait();
 			Proc->Exit(*m_reporter, log);
 			AppInstance->m_reporter->ReportNewStatus(Status_Stoped, 0);
 		}
@@ -261,6 +264,10 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::HelpFunc()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 {
+	if (!Initialize())
+	{
+		return 1;
+	}
 	std::string svcName;
 	if (m_vm["name"].empty())
 	{
@@ -375,6 +382,10 @@ WAIT_STOP_TIMEOUT=300\n") % svcName%svcName%svcDisplayName%svcName%daemonPath%pa
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::UninstallDaemon()
 {
+	if (!Initialize())
+	{
+		return 1;
+	}
 	//TODO 自定义路径
 	std::string path = PathHelper::AppDeployPath();
 	std::string nameFilePath = path;
@@ -410,9 +421,10 @@ template<typename T,T *Proc> int ApplicationBase<T,Proc>::UninstallDaemonImpl(co
 	return 0;
 }
 
-template<typename T,T *Proc> bool ApplicationBase<T,Proc>::Initialize(int argc, char *argv[])
+template<typename T,T *Proc> bool ApplicationBase<T,Proc>::Initialize()
 {
 	//TODO 自定义路径
+	m_evt.reset(new WaitEvent());
 	std::string path = PathHelper::AppDeployPath();
 	if (chdir(path.c_str()) != 0)
 	{
@@ -446,10 +458,6 @@ template<typename T,T *Proc> bool ApplicationBase<T,Proc>::Initialize(int argc, 
 	{
 		m_serviceName = T::SvcName();
 	}
-
-	boost::program_options::store(boost::program_options::parse_command_line(argc, argv, m_optionsDesc), m_vm);
-	boost::program_options::notify(m_vm);
-
 	return true;
 }
 
@@ -461,30 +469,12 @@ template<typename T,T *Proc> void ApplicationBase<T,Proc>::SignalHandler(int sig
 	case SIGINT:
 	case SIGQUIT:
 		AppInstance->m_reporter->ReportNewStatus(Status_StopPending, 30000);
-		AppInstance->m_evt.Signal();
+		AppInstance->m_evt->Signal();
 		break;
 	default:
 		//SIGTTIN,SIGTTOU
 		break;
 	}
-}
-
-template<typename T, T *Proc> int ApplicationBase<T, Proc>::RedirectStream()
-{
-	int fd = open("/dev/null", O_RDWR);
-	if (fd == -1)
-	{
-		LOG4CPLUS_ERROR(log, "打开/dev/null失败。");
-		return 1;
-	}
-	if (dup2(fd, STDIN_FILENO) == -1 || dup2(fd, STDOUT_FILENO) == -1 || dup2(fd, STDERR_FILENO) == -1)
-	{
-		close(fd);
-		LOG4CPLUS_ERROR(log, "重定向失败。");
-		return 1;
-	}
-	close(fd);
-	return 0;
 }
 
 template<typename T, T *Proc> bool ApplicationBase<T, Proc>::WriteFile(const std::string &content,const std::string &path)

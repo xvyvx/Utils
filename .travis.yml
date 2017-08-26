@@ -73,4 +73,4 @@ script:
   - cmake --build . && cd ./bin && ./UtilsTest --color_output=y
 
 after_success:
-  - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then chmod +x ../../coveralls && ../../coveralls; fi
+  - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then cd .. && chmod +x ../coveralls && ../coveralls; fi

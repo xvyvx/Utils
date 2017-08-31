@@ -33,4 +33,4 @@ before_build:
     cmake -G "%generator%" -DCMAKE_CONFIGURATION_TYPES=%CONFIG% -DBOOST_INCLUDEDIR=C:\Libraries\boost_1_64_0 -DBOOST_LIBRARYDIR=%boost_lib_path% -Dlog4cplus_INCLUDEDIR=%APPVEYOR_BUILD_FOLDER%\3rd\log4cplus-REL_1_2_0\include\ -Dlog4cplus_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\3rd\log4cplus-REL_1_2_0\build\src\ -Dotl_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\3rd\ -Dotl_VERSION_MAJOR=4 ..
 
 build_script:
-  - cmake --build . --config %CONFIG% && cd .\bin\%CONFIG% && .\UtilsTest
+  - cmake --build . --config %CONFIG% && ctest --build-config %CONFIG% --output-on-failure

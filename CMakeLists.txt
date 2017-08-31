@@ -24,5 +24,6 @@ ADD_SUBDIRECTORY(Utils)
 
 OPTION(BUILD_TESTS "Wether to build test cases(ON/OFF),default is ON." ON)
 IF(BUILD_TESTS)
+	ENABLE_TESTING()
 	ADD_SUBDIRECTORY(Tests)
 ENDIF()

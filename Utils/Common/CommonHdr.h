@@ -19,7 +19,7 @@
 	#endif
 #endif
 
-#if defined(_MSC_VER) && defined(UTILS_EXPORTS)
+#if defined(UTILS_EXPORTS)
 #define UTILS_DECL_API
 #else
 #define UTILS_DECL_API UTILS_EXPORTS_API

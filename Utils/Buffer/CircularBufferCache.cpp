@@ -5,7 +5,7 @@ const char CircularBufferCacheLoggerName[] = "CircularBufferCache";
 
 CircularBufferCacheFactory CircularBufferCacheFactoryObj;
 
-template class UTILS_EXPORTS_API ObjectPoolBase
+template class UTILS_DEF_API ObjectPoolBase
 <
 	size_t, 
 	CircularBuffer, 
@@ -19,4 +19,4 @@ template class UTILS_EXPORTS_API ObjectPoolBase
 	CircularBufferCacheLoggerName
 >;
 
-template class UTILS_EXPORTS_API BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, &CircularBufferCacheFactoryObj, CircularBufferCacheLoggerName>;
+template class UTILS_DEF_API BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, &CircularBufferCacheFactoryObj, CircularBufferCacheLoggerName>;

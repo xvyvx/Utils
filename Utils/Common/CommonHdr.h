@@ -3,26 +3,28 @@
 
 #if defined(_MSC_VER)
 	#ifdef UTILS_EXPORTS
-	#define UTILS_EXPORTS_API __declspec(dllexport)
+		#define UTILS_EXPORTS_API __declspec(dllexport)
 	#elif UTILS_IMPORTS
-	#define UTILS_EXPORTS_API __declspec(dllimport)
+		#define UTILS_EXPORTS_API __declspec(dllimport)
 	#else
-	#define UTILS_EXPORTS_API
+		#define UTILS_EXPORTS_API
 	#endif
 #elif defined(__GNUC__)
 	#ifdef UTILS_EXPORTS
-	#define UTILS_EXPORTS_API __attribute__ ((visibility ("default")))
+		#define UTILS_EXPORTS_API __attribute__ ((visibility ("default")))
 	#elif UTILS_IMPORTS
-	#define UTILS_EXPORTS_API __attribute__ ((visibility ("default")))
+		#define UTILS_EXPORTS_API __attribute__ ((visibility ("default")))
 	#else
-	#define UTILS_EXPORTS_API
+		#define UTILS_EXPORTS_API
 	#endif
 #endif
 
-#if defined(UTILS_EXPORTS)
-#define UTILS_DECL_API
+#if defined(_MSC_VER) && defined(UTILS_EXPORTS)
+	#define UTILS_DECL_API
+	#define UTILS_DEF_API UTILS_EXPORTS_API
 #else
-#define UTILS_DECL_API UTILS_EXPORTS_API
+	#define UTILS_DECL_API UTILS_EXPORTS_API
+	#define UTILS_DEF_API
 #endif
 
 #if defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)

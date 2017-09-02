@@ -5,7 +5,7 @@
 
 const char SerialPortChannelLoggerName[] = "SerialPortChannel";
 
-template class UTILS_EXPORTS_API StreamChannelBase<SerialPortTraits, SerialPortChannelLoggerName>;
+template class UTILS_DEF_API StreamChannelBase<SerialPortTraits, SerialPortChannelLoggerName>;
 
 SerialPortChannel::SerialPortChannel(const SerialPortSettings &settings):
 	StreamChannelBase<SerialPortTraits,SerialPortChannelLoggerName>(std::make_shared<SerialPortTraits::StreamType>(ThreadPool::Instance().Service())), m_settings(settings),

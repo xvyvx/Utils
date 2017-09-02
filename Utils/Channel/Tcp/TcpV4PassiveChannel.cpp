@@ -3,4 +3,4 @@
 
 const char TcpV4PassiveChannelLoggerName[] = "TcpV4PassiveChannel";
 
-template class UTILS_EXPORTS_API TcpPassiveChannelBase<TcpV4Traits, TcpV4PassiveChannelLoggerName>;
+template class UTILS_DEF_API TcpPassiveChannelBase<TcpV4Traits, TcpV4PassiveChannelLoggerName>;

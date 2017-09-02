@@ -10,6 +10,8 @@ ls
 
 gcov --source-prefix ${TRAVIS_BUILD_DIR} --preserve-paths --relative-only $(find -iname *.gcda) 1>/dev/null || exit 0
 
+echo "generating done."
+
 cat >coverage.json <<EOF
 {
   "service_job_id": "${TRAVIS_JOB_ID}",

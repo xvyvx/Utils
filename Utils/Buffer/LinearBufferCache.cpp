@@ -12,7 +12,7 @@ LinearBuffer* LinearBufferCacheFactory::operator()(size_t requireSize)
 
 LinearBufferCacheFactory LinearBufferCacheFactoryObj;
 
-template class UTILS_EXPORTS_API ObjectPoolBase
+template class UTILS_DEF_API ObjectPoolBase
 <
 	size_t, 
 	LinearBuffer, 
@@ -26,4 +26,4 @@ template class UTILS_EXPORTS_API ObjectPoolBase
 	LinearBufferCacheLoggerName
 >;
 
-template class UTILS_EXPORTS_API BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, &LinearBufferCacheFactoryObj, LinearBufferCacheLoggerName>;
+template class UTILS_DEF_API BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, &LinearBufferCacheFactoryObj, LinearBufferCacheLoggerName>;

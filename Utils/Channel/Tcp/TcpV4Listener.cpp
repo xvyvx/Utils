@@ -15,4 +15,4 @@ void TcpListenerAcceptEntry(std::shared_ptr<boost::asio::ip::tcp::endpoint> &rem
 	acceptFunc(remoteEndPoint, sock);
 }
 
-template class UTILS_EXPORTS_API TcpListenerBase<TcpV4Traits, TcpListenerAcceptFunc, TcpListenerAcceptEntry, TcpV4ListenerLoggerName>;
+template class UTILS_DEF_API TcpListenerBase<TcpV4Traits, TcpListenerAcceptFunc, TcpListenerAcceptEntry, TcpV4ListenerLoggerName>;

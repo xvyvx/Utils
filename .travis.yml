@@ -66,8 +66,8 @@ install:
 before_script:
   - mkdir build
   - cd ./build
-  - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then export CXXFLAGS="--coverage"; fi
-  - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="-D BOOST_TEST_DYN_LINK" -DCMAKE_BUILD_TYPE=$CONFIG ..
+  - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then export COVERAGE_FLAGS="--coverage"; fi
+  - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="-D BOOST_TEST_DYN_LINK $COVERAGE_FLAGS" -DCMAKE_BUILD_TYPE=$CONFIG ..
 
 script:
   - sudo cmake --build . --target install && ctest --output-on-failure

@@ -5,12 +5,7 @@ then
   exit 0
 fi
 
-echo "find gcda."
-ls
-
-gcov --source-prefix ${TRAVIS_BUILD_DIR} --preserve-paths --relative-only $(find -iname *.gcda) 1>/dev/null || exit 0
-
-echo "generating done."
+gcov --source-prefix ${TRAVIS_BUILD_DIR} --preserve-paths $(find -iname *.gcda) 1>/dev/null || exit 0
 
 cat >coverage.json <<EOF
 {

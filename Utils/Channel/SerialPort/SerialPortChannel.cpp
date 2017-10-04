@@ -22,7 +22,7 @@ SerialPortChannel::~SerialPortChannel()
 	}
 }
 
-void SerialPortChannel::AsyncOpen(const IAsyncChannelHandler::weak_ptr_t &handler)
+void SerialPortChannel::AsyncOpen(const IAsyncChannelHandler::ptr_t &handler)
 {
 	SpinLock<>::ScopeLock lock(BaseType::m_lock);
 	boost::system::error_code err;
@@ -73,15 +73,15 @@ void SerialPortChannel::AsyncOpen(const IAsyncChannelHandler::weak_ptr_t &handle
 	{
 		LOG4CPLUS_ERROR_FMT(BaseType::log, "打开SerialPort通道错误：%s", err.message().c_str());
 	}
-	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler.lock(), err));
+	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler, err));
 }
 
-void SerialPortChannel::AsyncClose(const IAsyncChannelHandler::weak_ptr_t &handler)
+void SerialPortChannel::AsyncClose(const IAsyncChannelHandler::ptr_t &handler)
 {
 	SpinLock<>::ScopeLock lock(BaseType::m_lock);
 	boost::system::error_code err;
 	Close(err);
-	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler.lock(), err));
+	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler, err));
 }
 
 void SerialPortChannel::Close(boost::system::error_code &error)

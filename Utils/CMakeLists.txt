@@ -14,7 +14,7 @@ TARGET_INCLUDE_DIRECTORIES(Utils INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DI
 SET_TARGET_PROPERTIES(Utils PROPERTIES VERSION ${UtilsVersion} SOVERSION ${UtilsSoVersion} CXX_VISIBILITY_PRESET hidden)
 TARGET_COMPILE_DEFINITIONS(Utils INTERFACE -DUTILS_IMPORTS PRIVATE -DUTILS_EXPORTS)
 TARGET_COMPILE_FEATURES(Utils PUBLIC cxx_std_11)
-TARGET_LINK_LIBRARIES(Utils PUBLIC Boost::thread Boost::system Boost::regex Boost::filesystem Boost::program_options log4cplus)
+TARGET_LINK_LIBRARIES(Utils PUBLIC Boost::thread Boost::system Boost::regex Boost::filesystem Boost::program_options log4cplus otl)
 IF(UNIX)
 	TARGET_LINK_LIBRARIES(Utils PRIVATE "pthread" bsd)
 	TARGET_COMPILE_OPTIONS(Utils PRIVATE -Wall) 

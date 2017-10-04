@@ -25,6 +25,7 @@ BOOST_AUTO_TEST_CASE(CircularBufferCacheTest)
 	BOOST_TEST((buf4096->capacity() == static_cast<size_t>(4096)));
 	CircularBufferCache::ptr_t bufNull = CircularBufferCache::Instance().Get(4097);
 	BOOST_TEST((bufNull.get() == nullptr));
+	CircularBufferCache::Instance().Destory();
 }
 
 BOOST_AUTO_TEST_CASE(LinearBufferCacheTest)
@@ -57,6 +58,7 @@ BOOST_AUTO_TEST_CASE(LinearBufferCacheTest)
 	BOOST_TEST((buf4096->capacity() == static_cast<size_t>(4096)));
 	LinearBufferCache::ptr_t bufNull = LinearBufferCache::Instance().Get(4097);
 	BOOST_TEST((bufNull.get() == nullptr));
+	LinearBufferCache::Instance().Destory();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

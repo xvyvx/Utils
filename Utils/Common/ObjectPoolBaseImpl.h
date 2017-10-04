@@ -76,9 +76,9 @@ OBJECT_POOL_BASE_TEMPLATE typename OBJECT_POOL_BASE_FULL_TYPE_NAME::ptr_t OBJECT
 	{
 		return ptr_t();
 	}
-	else if (target->m_objects.size() == 0)
+	SpinLock<>::ScopeLock lock(target->m_lock);
+	if (target->m_objects.size() == 0)
 	{
-		SpinLock<>::ScopeLock lock(target->m_lock);
 		size_t allocSize = target->m_allocatedCount;
 		try
 		{
@@ -104,7 +104,6 @@ OBJECT_POOL_BASE_TEMPLATE typename OBJECT_POOL_BASE_FULL_TYPE_NAME::ptr_t OBJECT
 	}
 	else
 	{
-		SpinLock<>::ScopeLock lock(target->m_lock);
 		ptr_t result(target->m_objects.back(), OBJECT_POOL_BASE_FULL_TYPE_NAME::ReleaseObject);
 		target->m_objects.pop_back();
 		return result;

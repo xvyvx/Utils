@@ -10,8 +10,6 @@ class UTILS_EXPORTS_API IAsyncChannelHandler
 public:
 	typedef std::shared_ptr<IAsyncChannelHandler> ptr_t;
 
-	typedef std::weak_ptr<IAsyncChannelHandler> weak_ptr_t;
-
 	IAsyncChannelHandler();
 
 	virtual ~IAsyncChannelHandler();

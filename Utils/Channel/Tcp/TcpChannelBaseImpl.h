@@ -30,7 +30,7 @@ template<typename ProtocolTraits, const char *LoggerName> TcpChannelBase<Protoco
 }
 
 template<typename ProtocolTraits, const char *LoggerName> void TcpChannelBase<ProtocolTraits, LoggerName>::AsyncOpen(
-	const IAsyncChannelHandler::weak_ptr_t &handler)
+	const IAsyncChannelHandler::ptr_t &handler)
 {
 	SpinLock<>::ScopeLock lock(BaseType::m_lock);
 	if(!BaseType::m_stream->is_open())
@@ -39,27 +39,27 @@ template<typename ProtocolTraits, const char *LoggerName> void TcpChannelBase<Pr
 		Open(err);
 		if(err)
 		{
-			ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler.lock(), err));
+			ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler, err));
 		}
 		else
 		{
-			BaseType::m_stream->async_connect(m_remoteEndPoint, std::bind(&IAsyncChannelHandler::EndOpen, handler.lock(), std::placeholders::_1));
+			BaseType::m_stream->async_connect(m_remoteEndPoint, std::bind(&IAsyncChannelHandler::EndOpen, handler, std::placeholders::_1));
 		}
 	}
 	else
 	{
 		BaseType::m_stream->async_connect(m_remoteEndPoint
-			, std::bind(&IAsyncChannelHandler::EndOpen, handler.lock(), std::placeholders::_1));
+			, std::bind(&IAsyncChannelHandler::EndOpen, handler, std::placeholders::_1));
 	}
 }
 
 template<typename ProtocolTraits, const char *LoggerName> void TcpChannelBase<ProtocolTraits, LoggerName>::AsyncClose(
-	const IAsyncChannelHandler::weak_ptr_t &handler)
+	const IAsyncChannelHandler::ptr_t &handler)
 {
 	SpinLock<>::ScopeLock lock(BaseType::m_lock);
 	boost::system::error_code shutdownErr, closeErr;
 	Close(shutdownErr, closeErr);
-	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler.lock(), shutdownErr ? shutdownErr : closeErr));
+	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler, shutdownErr ? shutdownErr : closeErr));
 }
 
 template<typename ProtocolTraits, const char *LoggerName> void TcpChannelBase<ProtocolTraits, LoggerName>::Open(boost::system::error_code &error)

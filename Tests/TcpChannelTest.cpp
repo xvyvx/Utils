@@ -15,8 +15,6 @@ BOOST_AUTO_TEST_SUITE(TcpChannelTest)
 	class MonkHandler :public std::enable_shared_from_this<MonkHandler>, public IAsyncChannelHandler
 	{
 	public:
-		static std::shared_ptr<MonkHandler> TestSession;
-
 		IAsyncChannel::ptr_t m_channel;
 
 		std::shared_ptr<CircularBuffer> m_readBuf{ new CircularBuffer(512) };
@@ -31,10 +29,15 @@ BOOST_AUTO_TEST_SUITE(TcpChannelTest)
 			BOOST_TEST(!err, "MonkHandler EndOpen called,message:" << err.message());
 			if(!err)
 			{
-				std::shared_ptr<LinearBuffer> buf(new LinearBuffer(512));
-				buf->assign(10, 10);
-				IAsyncChannelHandler::weak_ptr_t self(shared_from_this());
-				m_channel->AsyncWrite(buf, self);
+				for (int i = 0; i < 10; ++i)
+				{
+					std::shared_ptr<LinearBuffer> buf(new LinearBuffer(512));
+					buf->assign(10, 10);
+					m_channel->AsyncWrite(buf, shared_from_this());
+				}
+				BufDescriptor bufs[2];
+				size_t bufSize = m_readBuf->free_buffers(bufs);
+				m_channel->AsyncReadSome(bufs, bufSize, shared_from_this());
 			}
 		}
 
@@ -45,17 +48,26 @@ BOOST_AUTO_TEST_SUITE(TcpChannelTest)
 			if (!err)
 			{
 				m_readBuf->inc_size(bytesTransferred);
+				bool flag = false;
 				for (size_t i = 0; i < m_readBuf->size(); ++i)
 				{
-					bool flag = (*m_readBuf)[i] == 10;
+					flag = (*m_readBuf)[i] == 10;
 					BOOST_TEST(flag, "MonkHandler received buf content, index:" << i);
 					if (!flag)
 					{
 						break;
 					}
 				}
-				IAsyncChannelHandler::weak_ptr_t self(shared_from_this());
-				m_channel->AsyncClose(self);
+				if (!flag || m_readBuf->size() == 100)
+				{
+					m_channel->AsyncClose(shared_from_this());
+				}
+				else
+				{
+					BufDescriptor bufs[2];
+					size_t bufSize = m_readBuf->free_buffers(bufs);
+					m_channel->AsyncReadSome(bufs, bufSize, shared_from_this());
+				}
 			}
 		}
 
@@ -63,13 +75,6 @@ BOOST_AUTO_TEST_SUITE(TcpChannelTest)
 		{
 			SpinLock<>::ScopeLock lock(GlobalAssertLock);
 			BOOST_TEST(!err, "MonkHandler EndWrite called,message:" << err.message());
-			if (!err)
-			{
-				BufDescriptor bufs[2];
-				size_t bufSize = m_readBuf->free_buffers(bufs);
-				IAsyncChannelHandler::weak_ptr_t self(shared_from_this());
-				m_channel->AsyncReadSome(bufs, bufSize, self);
-			}
 		}
 
 		virtual void EndClose(const boost::system::error_code &err) override
@@ -83,11 +88,11 @@ BOOST_AUTO_TEST_SUITE(TcpChannelTest)
 class MonkSrvHandler :public std::enable_shared_from_this<MonkSrvHandler>, public IAsyncChannelHandler
 {
 public:
-	static std::shared_ptr<MonkSrvHandler> TestSession;
-
 	IAsyncChannel::ptr_t m_channel;
 
 	std::shared_ptr<CircularBuffer> m_readBuf{ new CircularBuffer(512) };
+
+	size_t m_sendSize{ 0 };
 
 	~MonkSrvHandler()
 	{
@@ -101,8 +106,7 @@ public:
 		{
 			BufDescriptor bufs[2];
 			size_t bufSize = m_readBuf->free_buffers(bufs);
-			IAsyncChannelHandler::weak_ptr_t self(shared_from_this());
-			m_channel->AsyncReadSome(bufs, bufSize, self);
+			m_channel->AsyncReadSome(bufs, bufSize, shared_from_this());
 		}
 	}
 
@@ -126,9 +130,8 @@ public:
 			if (flag)
 			{
 				std::shared_ptr<LinearBuffer> buf(new LinearBuffer(512));
-				buf->assign(10, 10);
-				IAsyncChannelHandler::weak_ptr_t self(shared_from_this());
-				m_channel->AsyncWrite(buf, self);
+				buf->assign(bytesTransferred, 10);
+				m_channel->AsyncWrite(buf, shared_from_this());
 			}
 		}
 	}
@@ -139,8 +142,11 @@ public:
 		BOOST_TEST(!err, "MonkSrvHandler EndWrite called,message:" << err.message() << "\n");
 		if (!err)
 		{
-			IAsyncChannelHandler::weak_ptr_t self(shared_from_this());
-			m_channel->AsyncClose(self);
+			m_sendSize += bytesTransferred;
+			if (m_sendSize == 100)
+			{
+				m_channel->AsyncClose(shared_from_this());
+			}
 		}
 	}
 
@@ -152,15 +158,10 @@ public:
 	}
 };
 
-std::shared_ptr<MonkHandler> MonkHandler::TestSession;
-
-std::shared_ptr<MonkSrvHandler> MonkSrvHandler::TestSession;
-
 void TestAcceptFunc(std::shared_ptr<boost::asio::ip::tcp::endpoint> &remoteEndPoint, std::shared_ptr<boost::asio::ip::tcp::socket> &sock)
 {
 	IAsyncChannel::ptr_t channel(new TcpV4PassiveChannel(sock, *remoteEndPoint));
 	std::shared_ptr<MonkSrvHandler> handler(new MonkSrvHandler());
-	MonkSrvHandler::TestSession = handler;
 	handler->m_channel = channel;
 	channel->AsyncOpen(handler);
 }
@@ -182,14 +183,12 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 	GlobalBarrier.ResetTaskCount(2);
 	GlobalBarrier.Reset();
 	ThreadPool::Instance().QueueWorkItem(Do);
-	MonkHandler::TestSession.reset(new MonkHandler());
-	static_cast<MonkHandler*>(MonkHandler::TestSession.get())->m_channel.reset(new TcpV4Channel("127.0.0.1", 8001));
-	static_cast<MonkHandler*>(MonkHandler::TestSession.get())->m_channel->AsyncOpen(MonkHandler::TestSession);
+	std::shared_ptr<MonkHandler> client(new MonkHandler());
+	client->m_channel.reset(new TcpV4Channel("127.0.0.1", 8001));
+	client->m_channel->AsyncOpen(client);
 	GlobalBarrier.WaitAllFinished();
 
 	ThreadPool::Stop();
-	MonkHandler::TestSession.reset();
-	MonkSrvHandler::TestSession.reset();
 	TcpV4Listener::Destory();
 	ThreadPool::Destory();
 }

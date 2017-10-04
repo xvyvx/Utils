@@ -13,9 +13,9 @@ public:
 
 	virtual ~TcpPassiveChannelBase() override;
 
-	virtual void AsyncOpen(const IAsyncChannelHandler::weak_ptr_t &handler) override;
+	virtual void AsyncOpen(const IAsyncChannelHandler::ptr_t &handler) override;
 
-	virtual void AsyncClose(const IAsyncChannelHandler::weak_ptr_t &handler) override;
+	virtual void AsyncClose(const IAsyncChannelHandler::ptr_t &handler) override;
 
 private:
 	void Close(boost::system::error_code &shutdownErr, boost::system::error_code &closeErr);

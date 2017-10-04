@@ -21,19 +21,19 @@ template<typename ProtocolTraits, const char *LoggerName> TcpPassiveChannelBase<
 }
 
 template<typename ProtocolTraits, const char *LoggerName> void TcpPassiveChannelBase<ProtocolTraits, LoggerName>::AsyncOpen(
-	const IAsyncChannelHandler::weak_ptr_t &handler)
+	const IAsyncChannelHandler::ptr_t &handler)
 {
 	boost::system::error_code err;
-	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler.lock(), err));
+	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler, err));
 }
 
 template<typename ProtocolTraits, const char *LoggerName> void TcpPassiveChannelBase<ProtocolTraits, LoggerName>::AsyncClose(
-	const IAsyncChannelHandler::weak_ptr_t &handler)
+	const IAsyncChannelHandler::ptr_t &handler)
 {
 	SpinLock<>::ScopeLock lock(BaseType::m_lock);
 	boost::system::error_code shutdownErr, closeErr;
 	Close(shutdownErr, closeErr);
-	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler.lock(), shutdownErr ? shutdownErr : closeErr));
+	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler, shutdownErr ? shutdownErr : closeErr));
 }
 
 template<typename ProtocolTraits, const char *LoggerName> void TcpPassiveChannelBase<ProtocolTraits, LoggerName>::Close(boost::system::error_code &shutdownErr, boost::system::error_code &closeErr)

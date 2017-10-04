@@ -147,6 +147,12 @@ public:
 			{
 				m_channel->AsyncClose(shared_from_this());
 			}
+			else
+			{
+				BufDescriptor bufs[2];
+				size_t bufSize = m_readBuf->free_buffers(bufs);
+				m_channel->AsyncReadSome(bufs, bufSize, shared_from_this());
+			}
 		}
 	}
 
@@ -183,9 +189,11 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 	GlobalBarrier.ResetTaskCount(2);
 	GlobalBarrier.Reset();
 	ThreadPool::Instance().QueueWorkItem(Do);
-	std::shared_ptr<MonkHandler> client(new MonkHandler());
-	client->m_channel.reset(new TcpV4Channel("127.0.0.1", 8001));
-	client->m_channel->AsyncOpen(client);
+	{
+		std::shared_ptr<MonkHandler> client(new MonkHandler());
+		client->m_channel.reset(new TcpV4Channel("127.0.0.1", 8001));
+		client->m_channel->AsyncOpen(client);
+	}
 	GlobalBarrier.WaitAllFinished();
 
 	ThreadPool::Stop();

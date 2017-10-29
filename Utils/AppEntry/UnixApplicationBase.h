@@ -319,50 +319,14 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 		LOG4CPLUS_ERROR(log, "Daemon模板脚本文件不存在。");
 		return 1;
 	}
-	std::string skeletonStr = ReadFile(skeletonPath);
-	if (skeletonStr.empty())
-	{
-		LOG4CPLUS_ERROR(log, "读取Daemon模板脚本文件失败。");
-		return 1;
-	}
 	//TODO 自定义路径
 	std::string daemonPath = PathHelper::AppExecutablePath();
-	std::string scriptContent = (boost::format("\
-#! /bin/sh\n\
-### BEGIN INIT INFO\n\
-# Provides:          %s\n\
-# Required-Start:    $remote_fs $syslog\n\
-# Required-Stop:     $remote_fs $syslog\n\
-# Default-Start:     2 3 4 5\n\
-# Default-Stop:      0 1 6\n\
-# Short-Description: %s daemon script\n\
-### END INIT INFO\n\
-\n\
-OPERATION=$1\n\
-set - e\n\
-\n\
-DESC=\"%s\"\n\
-NAME=%s\n\
-DAEMON=%s\n\
-DAEMON_ARGS=\"--svc\"\n\
-DAEMON_DIRECTORY=%s\n\
-WAIT_STOP_TIMEOUT=300\n") % svcName%svcName%svcDisplayName%svcName%daemonPath%path).str();
-	scriptContent.append(skeletonStr);
-	//TODO 自定义路径
-	std::string tempScriptPath = path;
-	PathHelper::Combine(&tempScriptPath, "Configuration", "tempscript", nullptr);
-	if(!WriteFile(scriptContent, tempScriptPath))
-	{
-		LOG4CPLUS_ERROR(log, "保存临时脚本文件失败。");
-		return 1;
-	}
 	std::string installScriptPath = path;
-	PathHelper::Combine(&installScriptPath, "Configuration", (boost::format("install.sh \"%s\" \"%s\" %02d %02d") % svcName % tempScriptPath % startOrder % stopOrder).str().c_str()
-		, nullptr);
+	PathHelper::Combine(&installScriptPath, "Configuration", (boost::format("install.sh \"%s\" \"%s\" \"%s\" \"%s\" %02d %02d") % svcName % svcDisplayName %daemonPath % path 
+		% startOrder % stopOrder).str().c_str(), nullptr);
 	int exitCode = system(installScriptPath.c_str());
 	if (exitCode != 0)
 	{
-		RemoveFile(tempScriptPath);
 		LOG4CPLUS_ERROR_FMT(log, "执行安装脚本失败，退出码：%d", exitCode);
 		return 1;
 	}
@@ -371,11 +335,9 @@ WAIT_STOP_TIMEOUT=300\n") % svcName%svcName%svcDisplayName%svcName%daemonPath%pa
 	PathHelper::Combine(&nameFilePath, "Configuration", "svcname.txt", nullptr);
 	if(!WriteFile(svcName, nameFilePath))
 	{
-		RemoveFile(tempScriptPath);
 		LOG4CPLUS_ERROR(log, "保存服务名失败。");
 		return 1;
 	}
-	RemoveFile(tempScriptPath);
 	LOG4CPLUS_INFO(log, "服务安装过程成功完成。");
 	return 0;
 }

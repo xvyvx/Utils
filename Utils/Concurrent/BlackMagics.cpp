@@ -19,7 +19,7 @@ UTILS_EXPORTS_API void DefaultBlackMagicFunc(unsigned count)
 	if (count < 4)
 	{
 	}
-#if defined( BOOST_SMT_PAUSE )
+#if defined( CALL_SMT_PAUSE )
 	else if (count < 16)
 	{
 		CALL_SMT_PAUSE

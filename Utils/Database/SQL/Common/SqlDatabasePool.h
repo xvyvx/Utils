@@ -7,14 +7,22 @@
 
 extern const char SqlDatabasePoolLoggerName[];
 
-inline void DummyClearFunc(ISqlDatabase *obj)
+class SqlDatabaseDummyClearFunc
 {
-}
+public:
+	inline void operator()(ISqlDatabase *obj)
+	{
+	}
+};
 
-inline bool SqlDatabasePoolPredicatorFunc(ISqlDatabase *obj,SqlDatabaseType type)
+class SqlDatabaseElementTrait
 {
-	return obj->Type() == type;
-}
+public:
+	static SqlDatabaseType GetKey(ISqlDatabase &obj)
+	{
+		return obj.Type();
+	}
+};
 
 class SqlDatabaseFactory
 {
@@ -22,30 +30,32 @@ public:
 	ISqlDatabase* operator()(SqlDatabaseType type);
 
 	const char *m_connStr;
-
-	static SqlDatabaseFactory Instance;
 };
 
 class UTILS_EXPORTS_API SqlDatabsePool :public ObjectPoolBase
 	<
 	SqlDatabaseType,
 	ISqlDatabase,
+	SqlDatabaseElementTrait,
 	SqlDatabsePool,
-	SqlDatabaseFactory, &SqlDatabaseFactory::Instance,
-	void(ISqlDatabase*), DummyClearFunc,
-	bool(ISqlDatabase*, SqlDatabaseType), SqlDatabasePoolPredicatorFunc,
-	SqlDatabasePoolLoggerName
+	SqlDatabaseFactory, 
+	SqlDatabaseDummyClearFunc,
+	SqlDatabasePoolLoggerName,
+	std::equal_to<SqlDatabaseType>,
+	std::equal_to<SqlDatabaseType>
 	>
 {
 	friend class ObjectPoolBase
 		<
 		SqlDatabaseType,
 		ISqlDatabase,
+		SqlDatabaseElementTrait,
 		SqlDatabsePool,
-		SqlDatabaseFactory, &SqlDatabaseFactory::Instance,
-		void(ISqlDatabase*), DummyClearFunc,
-		bool(ISqlDatabase*, SqlDatabaseType), SqlDatabasePoolPredicatorFunc,
-		SqlDatabasePoolLoggerName
+		SqlDatabaseFactory, 
+		SqlDatabaseDummyClearFunc,
+		SqlDatabasePoolLoggerName,
+		std::equal_to<SqlDatabaseType>,
+		std::equal_to<SqlDatabaseType>
 		>;
 };
 

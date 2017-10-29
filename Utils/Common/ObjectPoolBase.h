@@ -4,17 +4,21 @@
 #include <memory>
 #include <list>
 #include <vector>
+#include <functional>
 #include "../Log/Log4cplusCustomInc.h"
 #include "../Concurrent/SpinLock.h"
 
 template<
 	typename KeyType, 
 	typename ElemType, 
+	typename ElemTraitType,
 	typename SelfType, 
-	typename FactoryType, FactoryType *Factory,
-	typename ClearFuncType, ClearFuncType *ClearFunc,
-	typename PredicatorType, PredicatorType *PredicatorFunc,
-	const char *LoggerName> class ObjectPoolBase
+	typename FactoryType,
+	typename ClearFuncType,
+	const char *LoggerName,
+	typename FindPredType = std::equal_to<KeyType>,
+	typename GetPredType = std::less_equal<KeyType>
+	> class ObjectPoolBase
 {
 public:
 	typedef std::shared_ptr<ElemType> ptr_t;

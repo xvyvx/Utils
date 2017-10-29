@@ -144,6 +144,7 @@ void CircularBuffer::reserve(std::size_t newCapacity)
 			{
 				RunTimeLibraryHelper::MemCpy(temp.m_buf, m_subSize, m_beg, m_subSize);
 			}
+			temp.m_subSize = m_subSize;
 		}
 		swap(temp);
 	}

@@ -10,30 +10,22 @@ public:
 	{
 		obj->clear();
 	}
-
-	static BufferCacheBaseClearFunc Instance;
 };
 
-template<typename T> BufferCacheBaseClearFunc<T> BufferCacheBaseClearFunc<T>::Instance;
-
-template<typename T> class BufferCacheBasePredicatorFunc
+template<typename T> class BufferElementTrait
 {
 public:
-	inline bool operator()(T *obj, size_t size)
+	static size_t GetKey(const T &obj)
 	{
-		return size == obj->capacity();
+		return obj.capacity();
 	}
-
-	static BufferCacheBasePredicatorFunc Instance;
 };
 
-template<typename T> BufferCacheBasePredicatorFunc<T> BufferCacheBasePredicatorFunc<T>::Instance;
-
-template<typename T, typename FactoryType, FactoryType *Factory, const char *LoggerName> class BufferCacheBase :
-	public ObjectPoolBase<size_t, T, BufferCacheBase<T, FactoryType, Factory, LoggerName>, FactoryType, Factory, BufferCacheBaseClearFunc<T>, &BufferCacheBaseClearFunc<T>::Instance, BufferCacheBasePredicatorFunc<T>, &BufferCacheBasePredicatorFunc<T>::Instance, LoggerName>
+template<typename T, typename FactoryType, const char *LoggerName> class BufferCacheBase :
+	public ObjectPoolBase<size_t, T, BufferElementTrait<T>, BufferCacheBase<T, FactoryType, LoggerName>, FactoryType, BufferCacheBaseClearFunc<T>, LoggerName>
 {
 protected:
-	friend class ObjectPoolBase<size_t, T, BufferCacheBase<T, FactoryType, Factory, LoggerName>, FactoryType, Factory, BufferCacheBaseClearFunc<T>, &BufferCacheBaseClearFunc<T>::Instance, BufferCacheBasePredicatorFunc<T>, &BufferCacheBasePredicatorFunc<T>::Instance, LoggerName>;
+	friend class ObjectPoolBase<size_t, T, BufferElementTrait<T>, BufferCacheBase<T, FactoryType, LoggerName>, FactoryType, BufferCacheBaseClearFunc<T>, LoggerName>;
 
 	BufferCacheBase()
 	{

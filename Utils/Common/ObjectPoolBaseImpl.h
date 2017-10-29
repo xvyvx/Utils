@@ -5,8 +5,8 @@
 #include <assert.h>
 #include <algorithm>
 
-#define OBJECT_POOL_BASE_TEMPLATE template<typename KeyType, typename ElemType, typename SelfType, typename FactoryType, FactoryType *Factory, typename ClearFuncType, ClearFuncType *ClearFunc, typename PredicatorType, PredicatorType *PredicatorFunc, const char *LoggerName>
-#define OBJECT_POOL_BASE_FULL_TYPE_NAME ObjectPoolBase<KeyType, ElemType, SelfType, FactoryType, Factory, ClearFuncType, ClearFunc, PredicatorType, PredicatorFunc, LoggerName>
+#define OBJECT_POOL_BASE_TEMPLATE template<typename KeyType, typename ElemType, typename ElemTraitType, typename SelfType, typename FactoryType, typename ClearFuncType, const char *LoggerName, typename FindPredType, typename GetPredType>
+#define OBJECT_POOL_BASE_FULL_TYPE_NAME ObjectPoolBase<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType>
 
 OBJECT_POOL_BASE_TEMPLATE log4cplus::Logger OBJECT_POOL_BASE_FULL_TYPE_NAME::log = log4cplus::Logger::getInstance(LoggerName);
 
@@ -29,12 +29,12 @@ OBJECT_POOL_BASE_TEMPLATE OBJECT_POOL_BASE_FULL_TYPE_NAME::~ObjectPoolBase()
 
 OBJECT_POOL_BASE_TEMPLATE void OBJECT_POOL_BASE_FULL_TYPE_NAME::AddToObjectPool(KeyType requireKey, std::size_t count)
 {
+	FindPredType pred;
 	typename std::list<ObjectBlocks>::iterator target = std::find_if(m_blocks.begin(), m_blocks.end(),
-		[requireKey](const ObjectBlocks &val)->bool
-	{
-		return val.m_key == requireKey;
-	}
-	);
+		[requireKey, pred](const ObjectBlocks &val)->bool
+		{
+			return pred(requireKey, val.m_key);
+		});
 	ObjectBlocks *currentBlock;
 	if (target == m_blocks.end())
 	{
@@ -51,9 +51,10 @@ OBJECT_POOL_BASE_TEMPLATE void OBJECT_POOL_BASE_FULL_TYPE_NAME::AddToObjectPool(
 	size_t i = 0;
 	try
 	{
+		FactoryType factory;
 		for (; i < count; ++i)
 		{
-			currentBlock->m_objects.push_back((*Factory)(requireKey));
+			currentBlock->m_objects.push_back(factory(requireKey));
 		}
 		currentBlock->m_allocatedCount += count;
 	}
@@ -66,12 +67,12 @@ OBJECT_POOL_BASE_TEMPLATE void OBJECT_POOL_BASE_FULL_TYPE_NAME::AddToObjectPool(
 
 OBJECT_POOL_BASE_TEMPLATE typename OBJECT_POOL_BASE_FULL_TYPE_NAME::ptr_t OBJECT_POOL_BASE_FULL_TYPE_NAME::Get(KeyType requireKey)
 {
+	GetPredType pred;
 	typename std::list<ObjectBlocks>::iterator target = std::find_if(m_blocks.begin(), m_blocks.end(),
-		[requireKey](const ObjectBlocks &val)->bool
-	{
-		return val.m_key >= requireKey;
-	}
-	);
+		[requireKey, pred](const ObjectBlocks &val)->bool
+		{
+			return pred(requireKey, val.m_key);
+		});
 	if (target == m_blocks.end())
 	{
 		return ptr_t();
@@ -118,16 +119,13 @@ OBJECT_POOL_BASE_TEMPLATE void OBJECT_POOL_BASE_FULL_TYPE_NAME::ReleaseObject(El
 	}
 	else if (obj)
 	{
-		(*ClearFunc)(obj);
-		typename std::list<ObjectBlocks>::iterator target = instance->m_blocks.end();
-		for(typename std::list<ObjectBlocks>::iterator i=instance->m_blocks.begin();i!=instance->m_blocks.end();++i)
-		{
-			if ((*PredicatorFunc)(obj, i->m_key))
+		ClearFuncType()(obj);
+		FindPredType pred;
+		typename std::list<ObjectBlocks>::iterator target = std::find_if(instance->m_blocks.begin(), instance->m_blocks.end(),
+			[obj, pred](const ObjectBlocks &val)->bool
 			{
-				target = i;
-				break;
-			}
-		}
+				return pred(ElemTraitType::GetKey(*obj), val.m_key);
+			});
 		assert(target != instance->m_blocks.end());
 		SpinLock<>::ScopeLock lock(target->m_lock);
 		//这里不会失败，因为vector存指针的内存之前在构建池或是临时增加池大小时加上去了，只要不显示调用方法缩小空间，这部分空间就不会还回去（如果没加上去就不会有这个对象指针了）

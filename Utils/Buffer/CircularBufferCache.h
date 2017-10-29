@@ -15,24 +15,19 @@ public:
 	}
 };
 
-extern CircularBufferCacheFactory CircularBufferCacheFactoryObj;
-
-typedef BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, &CircularBufferCacheFactoryObj, CircularBufferCacheLoggerName> CircularBufferCache;
+typedef BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName> CircularBufferCache;
 
 extern template class UTILS_DECL_API ObjectPoolBase
 <
 	size_t,
 	CircularBuffer,
-	BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, &CircularBufferCacheFactoryObj, CircularBufferCacheLoggerName>,
+	BufferElementTrait<CircularBuffer>,
+	BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>,
 	CircularBufferCacheFactory,
-	&CircularBufferCacheFactoryObj,
 	BufferCacheBaseClearFunc<CircularBuffer>,
-	&BufferCacheBaseClearFunc<CircularBuffer>::Instance,
-	BufferCacheBasePredicatorFunc<CircularBuffer>,
-	&BufferCacheBasePredicatorFunc<CircularBuffer>::Instance,
 	CircularBufferCacheLoggerName
 >;
 
-extern template class UTILS_DECL_API BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, &CircularBufferCacheFactoryObj, CircularBufferCacheLoggerName>;
+extern template class UTILS_DECL_API BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>;
 
 #endif /* CIRCULARBUFFERCACHE_H */

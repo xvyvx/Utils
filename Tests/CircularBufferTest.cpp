@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include "Buffer/CircularBuffer.h"
+#include "Buffer/LinearBuffer.h"
 
 BOOST_AUTO_TEST_SUITE(CircularBufferTest)
 
@@ -46,6 +47,57 @@ BOOST_FIXTURE_TEST_CASE(GeneralTest, CircularBufferGeneralTestFixture)
 	BOOST_TEST(bufs[0].m_size == 384);
 	BOOST_TEST(bufs[1].m_size == 1);
 	BOOST_TEST((buf == m_bufContent), boost::test_tools::per_element());
+	buf.reserve(513);
+	BOOST_TEST((buf == m_bufContent), boost::test_tools::per_element());
+	buf.pop_front(126);
+	buf.inc_size(387);
+	buf.reserve(514);
+	BOOST_TEST(buf[0] == 127);
+	buf.pop_front(buf.size());
+	buf.inc_size(1);
+	buf.clear();
+	BOOST_TEST(buf.size() == 0);
+
+	buf.inc_size(127);
+	LinearBuffer linearBuf(513);
+	buf.copy_to(linearBuf, 0, 127);
+	for (int i = 0; i < linearBuf.size(); ++i)
+	{
+		BOOST_TEST(buf[i] == linearBuf[i]);
+	}
+	buf.pop_front(126);
+	buf.inc_size(387);
+	buf.copy_to(linearBuf, 0, 388);
+	for (int i = 0; i < linearBuf.size(); ++i)
+	{
+		BOOST_TEST(buf[i] == linearBuf[i]);
+	}
+}
+
+BOOST_FIXTURE_TEST_CASE(IteratorTest, CircularBufferGeneralTestFixture)
+{
+	auto iter = m_bufContent.begin();
+	bool result = *(++iter) == 2;
+	BOOST_TEST(result, "*(++iter) == 2");
+	result = *(--iter) == 1;
+	BOOST_TEST(result, "*(--iter) == 1");
+	iter += 2;
+	result = *iter == 3;
+	BOOST_TEST(result, "*iter == 3");
+	iter -= 2;
+	result = *iter == 1;
+	BOOST_TEST(result, "*iter == 1");
+	auto iter2 = iter + 2;
+	result = *iter2 == 3;
+	BOOST_TEST(result, "*iter2 == 3");
+	iter2 = iter2 - 2;
+	result = *iter2 == 1;
+	BOOST_TEST(result, "*iter2 == 1");
+	result = iter2 - iter2 == 0;
+	BOOST_TEST(result, "iter - iter2 == 0");
+	++iter2;
+	result = iter < iter2;
+	BOOST_TEST(result, "iter < iter2");
 }
 
 struct CircularBufferCopyCtrlTestFixture

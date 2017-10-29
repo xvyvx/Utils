@@ -5,8 +5,6 @@
 
 const char SqlDatabasePoolLoggerName[] = "SqlDatabasePool";
 
-SqlDatabaseFactory SqlDatabaseFactory::Instance;
-
 ISqlDatabase* SqlDatabaseFactory::operator()(SqlDatabaseType type)
 {
 	ISqlDatabase *ret = 0;

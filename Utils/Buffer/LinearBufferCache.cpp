@@ -10,20 +10,15 @@ LinearBuffer* LinearBufferCacheFactory::operator()(size_t requireSize)
 	return ret;
 }
 
-LinearBufferCacheFactory LinearBufferCacheFactoryObj;
-
 template class UTILS_DEF_API ObjectPoolBase
 <
 	size_t, 
 	LinearBuffer, 
-	BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, &LinearBufferCacheFactoryObj, LinearBufferCacheLoggerName>, 
+	BufferElementTrait<LinearBuffer>,
+	BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, LinearBufferCacheLoggerName>, 
 	LinearBufferCacheFactory, 
-	&LinearBufferCacheFactoryObj, 
 	BufferCacheBaseClearFunc<LinearBuffer>, 
-	&BufferCacheBaseClearFunc<LinearBuffer>::Instance, 
-	BufferCacheBasePredicatorFunc<LinearBuffer>, 
-	&BufferCacheBasePredicatorFunc<LinearBuffer>::Instance, 
 	LinearBufferCacheLoggerName
 >;
 
-template class UTILS_DEF_API BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, &LinearBufferCacheFactoryObj, LinearBufferCacheLoggerName>;
+template class UTILS_DEF_API BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, LinearBufferCacheLoggerName>;

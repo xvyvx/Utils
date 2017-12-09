@@ -61,14 +61,14 @@ BOOST_FIXTURE_TEST_CASE(GeneralTest, CircularBufferGeneralTestFixture)
 	buf.inc_size(127);
 	LinearBuffer linearBuf(513);
 	buf.copy_to(linearBuf, 0, 127);
-	for (int i = 0; i < linearBuf.size(); ++i)
+	for (LinearBuffer::size_type i = 0; i < linearBuf.size(); ++i)
 	{
 		BOOST_TEST(buf[i] == linearBuf[i]);
 	}
 	buf.pop_front(126);
 	buf.inc_size(387);
 	buf.copy_to(linearBuf, 0, 388);
-	for (int i = 0; i < linearBuf.size(); ++i)
+	for (LinearBuffer::size_type i = 0; i < linearBuf.size(); ++i)
 	{
 		BOOST_TEST(buf[i] == linearBuf[i]);
 	}

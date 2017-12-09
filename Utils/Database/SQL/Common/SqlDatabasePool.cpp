@@ -1,3 +1,5 @@
+#if defined(USE_ODBC_DATABASE_UTILS) || defined(USE_OCI_DATABASE_UTILS)
+
 #include "SqlDatabasePool.h"
 #include "../ODBC/ODBCSqlDatabase.h"
 #include "../OCI/OCISqlDatabase.h"
@@ -49,3 +51,5 @@ public:
 #endif
 	}
 } OtlInitializer;
+
+#endif

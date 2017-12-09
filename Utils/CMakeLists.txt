@@ -5,7 +5,8 @@ SET(UtilSources AppEntry/IProgressReporter.cpp AppEntry/WinSvcProgressReporter.c
 	Common/PathHelper.cpp
 	Concurrent/BlackMagics.cpp Concurrent/ThreadPool.cpp Concurrent/WaitEvent.cpp
 	Database/SQL/Common/ISqlDatabase.cpp Database/SQL/Common/SqlDatabasePool.cpp Database/SQL/ODBC/ODBCSqlDatabase.cpp
-	Database/SQL/OCI/OCISqlDatabase.cpp)
+	Database/SQL/OCI/OCISqlDatabase.cpp
+	Diagnostics/DiagnosticsHelper.cpp)
 
 SET(UtilsVersion 1.0)
 SET(UtilsSoVersion 1)

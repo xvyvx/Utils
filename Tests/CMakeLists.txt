@@ -1,4 +1,5 @@
-SET(TestsSources LinearBufferTest.cpp CircularBufferTest.cpp BufferCacheTest.cpp TlsTest.cpp TcpChannelTest.cpp PathHelperTest.cpp BinaryHelperTest.cpp)
+SET(TestsSources LinearBufferTest.cpp CircularBufferTest.cpp BufferCacheTest.cpp TlsTest.cpp TcpChannelTest.cpp PathHelperTest.cpp BinaryHelperTest.cpp
+	DiagnosticsTest.cpp)
 
 ADD_EXECUTABLE(UtilsTest ${TestsSources})
 TARGET_INCLUDE_DIRECTORIES(UtilsTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../Utils)
@@ -26,3 +27,5 @@ AddToTest(TlsGeneralTest TlsTest/GeneralTest)
 AddToTest(PathHelperGeneralTest PathHelperTest/GeneralTest)
 
 AddToTest(BinaryHelperGeneralTest BinaryHelperTest/GeneralTest)
+
+AddToTest(DiagnosticsTest DiagnosticsTest/GetCPUUsageTest)

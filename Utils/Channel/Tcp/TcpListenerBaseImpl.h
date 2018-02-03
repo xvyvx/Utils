@@ -138,7 +138,7 @@ template<typename ProtocolTraits, typename AcceptFunc, AcceptFunc *AcceptFunctio
 	std::pair<std::set<std::shared_ptr<boost::asio::ip::tcp::acceptor>>::iterator, bool> result = std::make_pair(m_acceptors.end(), false);
 	try
 	{
-		result = m_acceptors.insert(std::make_shared<boost::asio::ip::tcp::acceptor>(ThreadPool::Instance().Service()));
+		result = m_acceptors.insert(std::make_shared<boost::asio::ip::tcp::acceptor>(ThreadPool::Instance().Context()));
 		assert(result.second);
 		const std::shared_ptr<boost::asio::ip::tcp::acceptor> &listener = *result.first;
 		listener->open(ProtocolTraits::Protocol());
@@ -168,7 +168,7 @@ template<typename ProtocolTraits, typename AcceptFunc, AcceptFunc *AcceptFunctio
 template<typename ProtocolTraits, typename AcceptFunc, AcceptFunc *AcceptFunction, const char *LoggerName> 
 	void TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>::BeginAccept(std::shared_ptr<boost::asio::ip::tcp::acceptor> listener)
 {
-	std::shared_ptr<boost::asio::ip::tcp::socket> sock(new boost::asio::ip::tcp::socket(ThreadPool::Instance().Service()));
+	std::shared_ptr<boost::asio::ip::tcp::socket> sock(new boost::asio::ip::tcp::socket(ThreadPool::Instance().Context()));
 	std::shared_ptr<boost::asio::ip::tcp::endpoint> remotePoint(new boost::asio::ip::tcp::endpoint());
 	listener->async_accept(*sock, *remotePoint
 		, std::bind(&TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>::EndAccept

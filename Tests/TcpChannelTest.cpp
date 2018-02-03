@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 
 	GlobalBarrier.ResetTaskCount(2);
 	GlobalBarrier.Reset();
-	ThreadPool::Instance().QueueWorkItem(Do);
+	QueueThreadPoolWorkItem(Do);
 	{
 		std::shared_ptr<MonkHandler> client(new MonkHandler());
 		client->m_channel.reset(new TcpV4Channel("127.0.0.1", 8001));
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 	}
 	GlobalBarrier.WaitAllFinished();
 
-	ThreadPool::Stop();
+	ThreadPool::Instance().Stop();
 	TcpV4Listener::Destory();
 	ThreadPool::Destory();
 }

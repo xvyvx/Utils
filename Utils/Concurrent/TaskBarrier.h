@@ -34,6 +34,11 @@ public:
 		m_finishedCount.fetch_add(count, std::memory_order_release);
 	}
 
+	unsigned int CurrentFinishedCount()
+	{
+		return m_finishedCount.load(std::memory_order_acquire);
+	}
+
 	void WaitAllFinished()
 	{
 		for (unsigned k = 0; m_finishedCount.load(std::memory_order_acquire) < m_taskCount.load(std::memory_order_relaxed); ++k)

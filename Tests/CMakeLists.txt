@@ -1,12 +1,12 @@
 SET(TestsSources LinearBufferTest.cpp CircularBufferTest.cpp BufferCacheTest.cpp TlsTest.cpp TcpChannelTest.cpp PathHelperTest.cpp BinaryHelperTest.cpp
-	DiagnosticsTest.cpp)
+	DiagnosticsTest.cpp ThreadPoolTest.cpp)
 
 ADD_EXECUTABLE(UtilsTest ${TestsSources})
 TARGET_INCLUDE_DIRECTORIES(UtilsTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../Utils)
 TARGET_LINK_LIBRARIES(UtilsTest Boost::unit_test_framework Utils)
 
 MACRO(AddToTest TestName Filter)
-	ADD_TEST(NAME ${TestName} COMMAND UtilsTest --run_test=${Filter})
+	ADD_TEST(NAME ${TestName} COMMAND UtilsTest --run_test=${Filter} --log_level=message)
 	SET_TESTS_PROPERTIES(${TestName} PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
 ENDMACRO(AddToTest)
 
@@ -29,3 +29,5 @@ AddToTest(PathHelperGeneralTest PathHelperTest/GeneralTest)
 AddToTest(BinaryHelperGeneralTest BinaryHelperTest/GeneralTest)
 
 AddToTest(DiagnosticsTest DiagnosticsTest/GetCPUUsageTest)
+
+AddToTest(ThreadPoolTest ThreadPoolTest/GeneralTest)

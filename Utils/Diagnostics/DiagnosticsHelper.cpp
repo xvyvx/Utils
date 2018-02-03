@@ -5,7 +5,7 @@
 
 #include <Windows.h>
 
-#define DEVIATION(x, y) (((static_cast<us64>(x.dwHighDateTime) << 32) | x.dwLowDateTime) - ((static_cast<us64>(y.dwHighDateTime) << 32) | y.dwLowDateTime))
+#define DEVIATION(x, y) (((static_cast<us64>((x).dwHighDateTime) << 32) | (x).dwLowDateTime) - ((static_cast<us64>((y).dwHighDateTime) << 32) | (y).dwLowDateTime))
 
 namespace
 {

@@ -11,9 +11,9 @@ template<typename StreamTraits, const char *LoggerName> class StreamChannelBase:
 public:
 	StreamChannelBase(const std::shared_ptr<typename StreamTraits::StreamType> &stream);
 
-	virtual void AsyncReadSome(BufDescriptor bufs[], size_t bufSize, const IAsyncChannelHandler::ptr_t &handler, void *ctx = nullptr) override;
+	virtual void AsyncReadSome(BufDescriptor bufs[], size_t bufSize, const IAsyncChannelHandler::ptr_t &handler, void *ctx) override;
 
-	virtual void AsyncWrite(const std::shared_ptr<LinearBuffer> &buf, const IAsyncChannelHandler::ptr_t &handler, void *ctx = nullptr) override;
+	virtual void AsyncWrite(const std::shared_ptr<LinearBuffer> &buf, const IAsyncChannelHandler::ptr_t &handler, void *ctx) override;
 
 protected:
 	std::shared_ptr<typename StreamTraits::StreamType> m_stream;

@@ -67,7 +67,7 @@ before_script:
   - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="-D BOOST_TEST_DYN_LINK $COVERAGE_FLAGS" -DCMAKE_BUILD_TYPE=$CONFIG ..
 
 script:
-  - sudo cmake --build . --target install && ctest --output-on-failure
+  - sudo env "PATH=$PATH" cmake --build . --target install && ctest --output-on-failure
 
 after_success:
   - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then chmod +x ../coveralls && ../coveralls; fi

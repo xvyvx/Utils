@@ -9,9 +9,9 @@ template<typename ProtocolTraits, const char *LoggerName> class TcpChannelBase :
 public:
 	typedef StreamChannelBase<ProtocolTraits, LoggerName> BaseType;
 
-	TcpChannelBase(const std::string &remoteAddr, us16 remotePort, us16 localPort = 0, const std::string &localAddr = ProtocolTraits::AnyAddressString());
+	TcpChannelBase(const std::string &remoteAddr, us16 remotePort, bool openOnConstruct = true, us16 localPort = 0, const std::string &localAddr = ProtocolTraits::AnyAddressString());
 
-	TcpChannelBase(const typename ProtocolTraits::AddressType &remoteAddr, us16 remotePort, us16 localPort = 0
+	TcpChannelBase(const typename ProtocolTraits::AddressType &remoteAddr, us16 remotePort, bool openOnConstruct = true, us16 localPort = 0
 		, const typename ProtocolTraits::AddressType &localAddr = ProtocolTraits::AnyAddress());
 
 	virtual ~TcpChannelBase() override;

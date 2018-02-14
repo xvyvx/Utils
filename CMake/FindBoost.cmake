@@ -391,14 +391,21 @@ endmacro()
 # version with a regex.
 #
 function(_Boost_COMPILER_DUMPVERSION _OUTPUT_VERSION)
-
-  exec_program(${CMAKE_CXX_COMPILER}
-    ARGS ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
-    OUTPUT_VARIABLE _boost_COMPILER_VERSION
-  )
-  string(REGEX REPLACE "([0-9])\\.([0-9])(\\.[0-9])?" "\\1\\2"
-    _boost_COMPILER_VERSION ${_boost_COMPILER_VERSION})
-
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	  exec_program(${CMAKE_CXX_COMPILER}
+		ARGS ${CMAKE_CXX_COMPILER_ARG1} --version
+		OUTPUT_VARIABLE _boost_COMPILER_VERSION
+	  )
+	  string(REGEX REPLACE "clang version ([0-9])\\.([0-9])(\\.[0-9])?(.*)" "\\1\\2"
+		_boost_COMPILER_VERSION ${_boost_COMPILER_VERSION})
+  else()
+	exec_program(${CMAKE_CXX_COMPILER}
+	  ARGS ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
+	  OUTPUT_VARIABLE _boost_COMPILER_VERSION
+	)
+	string(REGEX REPLACE "([0-9])\\.([0-9])(\\.[0-9])?" "\\1\\2"
+	  _boost_COMPILER_VERSION ${_boost_COMPILER_VERSION})
+  endif()
   set(${_OUTPUT_VERSION} ${_boost_COMPILER_VERSION} PARENT_SCOPE)
 endfunction()
 
@@ -472,6 +479,9 @@ function(_Boost_GUESS_COMPILER_PREFIX _ret)
     set(_boost_COMPILER "-sw")
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "XL")
     set(_boost_COMPILER "-xlc")
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	_Boost_COMPILER_DUMPVERSION(_boost_COMPILER_VERSION)
+	set(_boost_COMPILER "-clang${_boost_COMPILER_VERSION}")
   elseif (MINGW)
     if(${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION} VERSION_LESS 1.34)
         set(_boost_COMPILER "-mgw") # no GCC version encoding prior to 1.34

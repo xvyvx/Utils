@@ -61,7 +61,7 @@ before_script:
   - mkdir build
   - cd ./build
   - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then export COVERAGE_FLAGS="--coverage"; fi
-  - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="$COVERAGE_FLAGS" -DBOOST_INCLUDEDIR="$THIRD_DIR/boost_1_66_0" -DBOOST_LIBRARYDIR="$THIRD_DIR/boost_1_66_0/stage/lib" -DBoost_COMPILER="-clang50" -DCMAKE_BUILD_TYPE=$CONFIG ..
+  - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="$COVERAGE_FLAGS" -DBOOST_INCLUDEDIR="$THIRD_DIR/boost_1_66_0" -DBOOST_LIBRARYDIR="$THIRD_DIR/boost_1_66_0/stage/lib" -DCMAKE_BUILD_TYPE=$CONFIG ..
 
 script:
   - sudo env "PATH=$PATH" cmake --build . --target install && ctest --output-on-failure

@@ -200,11 +200,11 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 {
 	ThreadPool::Instance();
 	SetListenerAcceptFunc(TestAcceptFunc);
-	TcpV4Listener::Instance().AddListenEndPoints(
+	BOOST_TEST(TcpV4Listener::Instance().AddListenEndPoints(
 		{
-			{ boost::asio::ip::address_v4::from_string("0.0.0.0"),8001 },
-			{ boost::asio::ip::address_v4::from_string("0.0.0.0"),8002 }
-		});
+			{ boost::asio::ip::address_v4::from_string("127.0.0.1"),8001 },
+			{ boost::asio::ip::address_v4::from_string("127.0.0.1"),8002 }
+		}), "Add end point error.");
 	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address_v4::from_string("0.0.0.0"), 8009);
 	BOOST_TEST(TcpV4Listener::Instance().AddListenEndPoint(ep), "Add test end point error.");
 	TcpV4Listener::Instance().RemoveListenerEndPoint(ep);

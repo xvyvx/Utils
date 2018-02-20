@@ -6,6 +6,9 @@
 
 extern const char TcpV4PassiveChannelLoggerName[];
 
+/**
+ * TCP v4 passive channel.
+ */
 typedef TcpPassiveChannelBase<TcpV4Traits, TcpV4PassiveChannelLoggerName> TcpV4PassiveChannel;
 
 extern template class UTILS_DECL_API TcpPassiveChannelBase<TcpV4Traits, TcpV4PassiveChannelLoggerName>;

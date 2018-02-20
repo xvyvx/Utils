@@ -12,6 +12,9 @@ public:
 	LinearBuffer* operator()(size_t requireSize);
 };
 
+/**
+ * Linear buffer cache impletemented by @ref BufferCacheBase.
+ */
 typedef BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, LinearBufferCacheLoggerName> LinearBufferCache;
 
 extern template class UTILS_DECL_API ObjectPoolBase

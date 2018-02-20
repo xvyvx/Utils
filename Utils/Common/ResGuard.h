@@ -3,33 +3,83 @@
 
 #include <utility>
 
+/**
+ * Moveonly resource guard.
+ *
+ * @tparam T Resource type.
+ * @tparam D Function type to release resource.
+ */
 template<typename T,typename D> class ResGuard
 {
 public:
+
+	/**
+	 * Constructor,ownership of obj is transfer to this ResGuard.
+	 *
+	 * @param obj	  Resource object.
+	 * @param deleter Deleter for release resource.
+	 */
 	ResGuard(T obj, D deleter);
 
+	/**
+	 * Copy constructor
+	 *
+	 * @param parameter1 The first parameter.
+	 */
 	ResGuard(const ResGuard&) = delete;
 
+	/**
+	 * Move constructor
+	 *
+	 * @param [in,out] rhs The right hand side.
+	 */
 	ResGuard(ResGuard &&rhs) noexcept(noexcept(swap(rhs)));
 
+	/**
+	 * Destructor,release the reource.
+	 */
 	~ResGuard();
 
+	/**
+	 * Assignment operator
+	 *
+	 * @param parameter1 The first parameter.
+	 *
+	 * @return A shallow copy of this object.
+	 */
 	ResGuard& operator=(const ResGuard&) = delete;
 
+	/**
+	 * Move assignment operator
+	 *
+	 * @param [in,out] rhs The right hand side.
+	 *
+	 * @return A shallow copy of this object.
+	 */
 	ResGuard& operator=(ResGuard &&rhs) noexcept(noexcept(swap(rhs)));
 
+	/**
+	 * Gets the raw resource.
+	 *
+	 * @return Resource object owned by this ResGuard.
+	 */
 	T get()
 	{
 		return m_obj;
 	}
 
+	/**
+	 * Swaps the given right hand side
+	 *
+	 * @param [in,out] rhs The right hand side.
+	 */
 	void swap(ResGuard<T, D> &rhs) noexcept(std::is_nothrow_move_constructible<T>::value&&std::is_nothrow_move_assignable<T>::value
 		&&std::is_nothrow_move_constructible<D>::value&&std::is_nothrow_move_assignable<D>::value);
 
 private:
-	T m_obj;
+	T m_obj;	/**< The resource object */
 
-	D m_deleter;
+	D m_deleter;	/**< The deleter */
 };
 
 template<typename T, typename D> void  ResGuard<T, D>::swap(ResGuard<T, D> &rhs) noexcept(std::is_nothrow_move_constructible<T>::value&&std::is_nothrow_move_assignable<T>::value

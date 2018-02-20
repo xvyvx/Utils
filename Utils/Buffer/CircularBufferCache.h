@@ -15,6 +15,9 @@ public:
 	}
 };
 
+/**
+ * Circular buffer cache impletemented by @ref BufferCacheBase.
+ */
 typedef BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName> CircularBufferCache;
 
 extern template class UTILS_DECL_API ObjectPoolBase

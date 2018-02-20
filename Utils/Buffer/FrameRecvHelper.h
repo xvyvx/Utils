@@ -3,32 +3,52 @@
 
 #include "CircularBuffer.h"
 
+/**
+ * Frame probe helper.
+ */
 class FrameRecvHelper
 {
 public:
+
+	/**
+	 * Values that represent frame probe result.
+	 */
 	enum class ProbeHint :int
 	{
-		Successful = 0,
-		Continue,
-		Failed
+		Successful = 0, /**< Probe successful. */
+		Continue, /**< Maybe a partial frame or no data to probe. */
+		Failed  /**< Probe failed. */
 	};
 
+	/**
+	 * Encapsulates the result data of a probe operation.
+	 */
 	struct ProbeResult
 	{
-		ProbeHint m_hint;
+		ProbeHint m_hint;   /**< Probe result. */
 
-		size_t m_predicatorIndex;//当m_hint为Successful时，指示predicator数组的索引，m_hint为其他值时无意义
+		size_t m_predicatorIndex;   /**< Indicate an index of predicator array when m_hint is Successful,otherwise not used.当m_hint为Successful时，指示predicator数组的索引，m_hint为其他值时无意义 */
 
-		size_t m_beg;
+		size_t m_beg;   /**< Indicate begin offset of a frame in buffer when m_hint is Successful,otherwise not used. */
 
-		size_t m_size;
+		size_t m_size;  /**< Indicate a frame size in buffer when m_hint is Successful,otherwise not used. */
 	};
 
-	/*
-	 * PredicateType=ProbeHint(CircularBuffer &buf,size_t beg,size_t &end)
-	 * buf-数据缓冲区
-	 * beg-当前探测的起始索引
-	 * end-如果成功则输出结束索引，否则无意义
+	/**
+	 * Probe frame a frame in buf with predicators in predicator array.
+	 *
+	 * @tparam PredicateType Type of the predicators.
+	 * @param [in,out] buf	 The buffer.
+	 * @param predicator The predicator array.
+	 * @param predicatorSize Size of the predicator array.
+	 * 	
+	 * @note The function signature of predicator must be:
+	 * @code ProbeHint(CircularBuffer &buf, //Data buffer
+	 * 		 size_t beg, //Current probe begin offset
+	 * 		 size_t &end //Frame end offset in buffer when probe successful,otherwise not used.
+	 * 	); @endcode
+	 *
+	 * @return A ProbeResult.
 	 */
 	template<typename PredicateType> static ProbeResult ProbeFrame(CircularBuffer &buf, PredicateType predicator[], size_t predicatorSize)
 	{
@@ -56,6 +76,14 @@ public:
 		return { ProbeHint::Continue,0,0,0 };
 	}
 
+	/**
+	 * Move a range of data from CircularBuffer to LinearBuffer.
+	 *
+	 * @param [in,out] buf Buffer that will be move from.
+	 * @param beg Begin offset in the CircularBuffer.
+	 * @param size Move size.
+	 * @param [in,out] seqBuf Buffer that will be move to.
+	 */
 	inline static void AdjustBuffer(CircularBuffer &buf, size_t beg, size_t size, LinearBuffer &seqBuf)
 	{
 		buf.copy_to(seqBuf, beg, size);

@@ -1,4 +1,4 @@
-SET(UtilSources AppEntry/IProgressReporter.cpp AppEntry/WinSvcProgressReporter.cpp
+SET(UtilSources AppEntry/IProgressReporter.cpp AppEntry/WinSvcProgressReporter.cpp AppEntry/SystemdProgressReporter.cpp
 	Buffer/BinaryHelper.cpp Buffer/CircularBuffer.cpp Buffer/CircularBufferCache.cpp Buffer/LinearBuffer.cpp Buffer/LinearBufferCache.cpp
 	Channel/Common/IAsyncChannel.cpp Channel/Common/IAsyncChannelHandler.cpp Channel/SerialPort/SerialPortChannel.cpp
 	Channel/Tcp/TcpV4Channel.cpp Channel/Tcp/TcpV4Listener.cpp Channel/Tcp/TcpV4PassiveChannel.cpp

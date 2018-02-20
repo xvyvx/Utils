@@ -8,6 +8,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+/**
+ * Service/Daemon running status.
+ */
 enum Status
 {
 	Status_StartPending = SERVICE_START_PENDING,
@@ -18,6 +21,9 @@ enum Status
 
 #else
 
+/**
+ * Service/Daemon running status.
+ */
 enum Status
 {
 	Status_StartPending,
@@ -28,39 +34,88 @@ enum Status
 
 #endif
 
+/**
+ * Interface of service/daemon running status reporter.
+ */
 class UTILS_EXPORTS_API IProgressReporter
 {
 public:
+
+	/**
+	 * Default constructor
+	 */
 	IProgressReporter();
 
+	/**
+	 * Destructor
+	 */
 	virtual ~IProgressReporter();
 
+	/**
+	 * Increment current status progress.
+	 *
+	 * @param step Amount to increment by.
+	 * @param waitHint System service manager wait times after this call.
+	 */
 	virtual void IncProgress(int step, int waitHint) = 0;
 
+	/**
+	 * Reports a new service running status.
+	 *
+	 * @param newStatus The new status.
+	 * @param waitHint System service manager wait times after this call.
+	 * @param exitCode  (Optional) The exit code if status is Status_Stoped.
+	 */
 	virtual void ReportNewStatus(Status newStatus, int waitHint, us32 exitCode = 0) = 0;
 
+	/**
+	 * Query current status.
+	 *
+	 * @return Current status.
+	 */
 	virtual Status CurrentStatus() = 0;
 };
 
+/**
+ * Empty implementation of IProgressReporter.
+ * 
+ * This implementation do nothing and @ref CurrentStatus() always return Status_Stoped.
+ */
 class UTILS_EXPORTS_API NullReport :public IProgressReporter
 {
 public:
+
+	/**
+	 * Default constructor
+	 */
 	NullReport():IProgressReporter()
 	{
 	}
 
+	/**
+	 * Destructor
+	 */
 	virtual ~NullReport()
 	{
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	virtual void IncProgress(int step, int waitHint) override
 	{
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	virtual void ReportNewStatus(Status newStatus, int waitHint, us32 exitCode = 0) override
 	{
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	virtual Status CurrentStatus() override
 	{
 		return Status_Stoped;

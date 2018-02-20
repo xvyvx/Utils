@@ -29,7 +29,7 @@ public:
 	/**
 	 * Start an asynchronous open operation on the communication channel,all operation error will reportted in the callback handler.
 	 *
-	 * @param The handler to be called when the open operation completes.
+	 * @param handler The handler to be called when the open operation completes.
 	 */
 	virtual void AsyncOpen(const IAsyncChannelHandler::ptr_t &handler) = 0;
 

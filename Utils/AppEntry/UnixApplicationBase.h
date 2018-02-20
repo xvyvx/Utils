@@ -23,8 +23,8 @@
 /**
  * Base class for Unix systemV/Linux systemd based application.
  *
- * @tparam T Application specific type
- * 	must implete following function:
+ * @tparam T Application specific type.
+ * 	T must implete following function:
  * @code
  * 	bool Startup(IProgressReporter&, const boost::program_options::variables_map&, log4cplus::Logger&)
  * 	bool Exit(IProgressReporter&, log4cplus::Logger&);

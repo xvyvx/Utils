@@ -179,6 +179,8 @@ template<typename ProtocolTraits, typename AcceptFunc, AcceptFunc *AcceptFunctio
 	void TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>::EndAccept(std::shared_ptr<boost::asio::ip::tcp::socket> sock
 	, std::shared_ptr<boost::asio::ip::tcp::endpoint> remoteEndPoint, std::shared_ptr<boost::asio::ip::tcp::acceptor> listener, const boost::system::error_code& error)
 {
+	bool listenerDropped = true;
+	boost::asio::ip::tcp::acceptor::endpoint_type ep;
 	{
 		SpinLock<>::ScopeLock lock(m_lock);
 		if (!m_stoped)
@@ -187,6 +189,11 @@ template<typename ProtocolTraits, typename AcceptFunc, AcceptFunc *AcceptFunctio
 			if (iter != m_acceptors.end())
 			{
 				BeginAccept(listener);
+				listenerDropped = false;
+				if(error)
+				{
+					ep = listener->local_endpoint();
+				}
 			}
 		}
 	}
@@ -194,9 +201,9 @@ template<typename ProtocolTraits, typename AcceptFunc, AcceptFunc *AcceptFunctio
 	{
 		AcceptFunction(remoteEndPoint, sock);
 	}
-	else
+	else if(!listenerDropped)
 	{
-		LOG4CPLUS_ERROR(log, "接收连接失败，监听终结点：" << listener->local_endpoint() << "，错误信息：" << error.message());
+		LOG4CPLUS_ERROR(log, "接收连接失败，监听终结点：" << ep << "，错误信息：" << error.message());
 	}
 }
 

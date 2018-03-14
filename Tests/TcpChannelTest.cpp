@@ -1,4 +1,7 @@
 #include <boost/test/unit_test.hpp>
+#include <log4cplus/logger.h>
+#include <log4cplus/consoleappender.h>
+#include <log4cplus/layout.h>
 #include "Concurrent/ThreadPool.h"
 #include "Channel/Tcp/TcpV4Listener.h"
 #include "Channel/Tcp/TcpV4Channel.h"
@@ -6,6 +9,27 @@
 #include "Buffer/CircularBuffer.h"
 #include "Concurrent/TaskBarrier.h"
 #include "Concurrent/WaitEvent.h"
+
+class TestLogFixture
+{
+public:
+	TestLogFixture()
+	{
+		::log4cplus::helpers::SharedObjectPtr<::log4cplus::Appender> append(new log4cplus::ConsoleAppender());
+		append->setName("console");
+		std::auto_ptr<::log4cplus::Layout> layout(new ::log4cplus::PatternLayout("%D %c[%t] %-5p %m%n"));
+		append->setLayout(layout);
+		::log4cplus::Logger logger = ::log4cplus::Logger::getRoot();
+		logger.addAppender(append);
+		logger.setLogLevel(::log4cplus::ERROR_LOG_LEVEL);
+	}
+
+	~TestLogFixture()
+	{
+	}
+};
+
+BOOST_TEST_GLOBAL_FIXTURE(TestLogFixture);
 
 SpinLock<> GlobalAssertLock;
 

@@ -53,9 +53,14 @@ bool ThreadPool::CreateThread()
 		boost::thread t(std::bind(&ThreadPool::ThreadEntry, this));
 		t.detach();
 	}
+	catch(const std::exception &ex)
+	{
+		LOG4CPLUS_ERROR_FMT(log, "线程池创建线程捕获异常：%s", ex.what());
+		return false;
+	}
 	catch (...)
 	{
-		LOG4CPLUS_ERROR(log, "线程池闯将线程捕获未知异常。");
+		LOG4CPLUS_ERROR(log, "线程池创建线程捕获未知异常。");
 		return false;
 	}
 	return true;
@@ -88,6 +93,10 @@ void ThreadPool::ThreadEntry(ThreadPool *self)
 					break;
 				}
 			}
+		}
+		catch (const std::exception &ex)
+		{
+			LOG4CPLUS_ERROR_FMT(log, "线程池执行线程捕获异常：%s", ex.what());
 		}
 		catch (...)
 		{

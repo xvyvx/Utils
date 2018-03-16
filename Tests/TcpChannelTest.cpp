@@ -189,10 +189,13 @@ public:
 
 void TestAcceptFunc(std::shared_ptr<boost::asio::ip::tcp::endpoint> &remoteEndPoint, std::shared_ptr<boost::asio::ip::tcp::socket> &sock)
 {
-	IAsyncChannel::ptr_t channel(new TcpV4PassiveChannel(sock, *remoteEndPoint));
-	std::shared_ptr<MonkSrvHandler> handler(new MonkSrvHandler());
-	handler->m_channel = channel;
-	channel->AsyncOpen(handler);
+	if (remoteEndPoint->port() != 8003)
+	{
+		IAsyncChannel::ptr_t channel(new TcpV4PassiveChannel(sock, *remoteEndPoint));
+		std::shared_ptr<MonkSrvHandler> handler(new MonkSrvHandler());
+		handler->m_channel = channel;
+		channel->AsyncOpen(handler);
+	}
 }
 
 void Do()

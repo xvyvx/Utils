@@ -20,15 +20,9 @@ matrix:
     - os: osx
       compiler: gcc
 
-#notifications:
-#   email:
-#    on_success: change
-#    on_failure: always
-
 before_install:
   - |
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
-      sudo add-apt-repository -y ppa:samuel-bachmann/pcl-boost1.60
       sudo apt-get update -qq
     else
       brew update
@@ -38,9 +32,12 @@ install:
   - THIRD_DIR="$TRAVIS_BUILD_DIR/3rd"
   - |
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
-      sudo apt-get -qq install -y unzip boost1.60 libbsd-dev
+      sudo apt-get -qq install -y unzip libbsd-dev
       mkdir $THIRD_DIR
       cd $THIRD_DIR
+      wget --no-check-certificate --quiet https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2
+      tar xjf ./boost_1_66_0.tar.bz2 && cd ./boost_1_66_0/ && ./bootstrap.sh
+      ./bjam stage --toolset=$CC cflags="-fPIC" cxxflags="-std=c++11 -fPIC" linkflags="-fPIC" --with-system --with-thread --with-regex --with-filesystem --with-program_options --with-atomic --with-date_time --with-test --stagedir="./stage" link=static runtime-link=shared threading=multi --layout=versioned variant=$(tr 'A-Z' 'a-z'<<<"$CONFIG")
       wget --no-check-certificate --quiet https://github.com/log4cplus/log4cplus/archive/REL_1_2_0.zip
       unzip -q REL_1_2_0.zip
       cd log4cplus-REL_1_2_0 && mkdir build && cd build
@@ -64,7 +61,7 @@ before_script:
   - mkdir build
   - cd ./build
   - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then export COVERAGE_FLAGS="--coverage"; fi
-  - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="-D BOOST_TEST_DYN_LINK $COVERAGE_FLAGS" -DCMAKE_BUILD_TYPE=$CONFIG ..
+  - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="$COVERAGE_FLAGS" -DBOOST_INCLUDEDIR="$THIRD_DIR/boost_1_66_0" -DBOOST_LIBRARYDIR="$THIRD_DIR/boost_1_66_0/stage/lib" -DCMAKE_BUILD_TYPE=$CONFIG ..
 
 script:
   - sudo env "PATH=$PATH" cmake --build . --target install && ctest --output-on-failure

@@ -1,0 +1,11 @@
+[Unit]
+Description=@svcDisplayName
+After=network.target@svcDepends
+
+[Service]
+Type=notify
+WorkingDirectory=@daemonExecutePath
+ExecStart=@daemonPath --svc-systemd
+
+[Install]
+WantedBy=multi-user.target

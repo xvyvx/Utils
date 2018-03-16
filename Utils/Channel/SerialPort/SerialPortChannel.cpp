@@ -1,5 +1,4 @@
 ﻿#include "SerialPortChannel.h"
-#include <functional>
 #include "../../Concurrent/ThreadPool.h"
 #include "../Common/StreamChannelBaseImpl.h"
 
@@ -8,7 +7,7 @@ const char SerialPortChannelLoggerName[] = "SerialPortChannel";
 template class UTILS_DEF_API StreamChannelBase<SerialPortTraits, SerialPortChannelLoggerName>;
 
 SerialPortChannel::SerialPortChannel(const SerialPortSettings &settings):
-	StreamChannelBase<SerialPortTraits,SerialPortChannelLoggerName>(std::make_shared<SerialPortTraits::StreamType>(ThreadPool::Instance().Service())), m_settings(settings),
+	StreamChannelBase<SerialPortTraits,SerialPortChannelLoggerName>(std::make_shared<SerialPortTraits::StreamType>(ThreadPool::Instance().Context())), m_settings(settings),
 	m_closed(false)
 {
 }
@@ -73,7 +72,7 @@ void SerialPortChannel::AsyncOpen(const IAsyncChannelHandler::ptr_t &handler)
 	{
 		LOG4CPLUS_ERROR_FMT(BaseType::log, "打开SerialPort通道错误：%s", err.message().c_str());
 	}
-	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler, err));
+	QueueThreadPoolWorkItem(&IAsyncChannelHandler::EndOpen, handler, err);
 }
 
 void SerialPortChannel::AsyncClose(const IAsyncChannelHandler::ptr_t &handler)
@@ -81,7 +80,7 @@ void SerialPortChannel::AsyncClose(const IAsyncChannelHandler::ptr_t &handler)
 	SpinLock<>::ScopeLock lock(BaseType::m_lock);
 	boost::system::error_code err;
 	Close(err);
-	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler, err));
+	QueueThreadPoolWorkItem(&IAsyncChannelHandler::EndClose, handler, err);
 }
 
 void SerialPortChannel::Close(boost::system::error_code &error)

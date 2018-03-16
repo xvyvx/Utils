@@ -7,16 +7,34 @@
 #include <boost/thread.hpp>
 #include "SpinLock.h"
 
+/**
+ * Thread local storeage helper.
+ *
+ * @tparam T Storeage type.
+ */
 template<typename T> class TlsHelper
 {
 public:
+	/**
+	 * Set a value to store.
+	 *
+	 * @param name Value's name.
+	 * @param ptr  (Optional) Value pointer to store,ownership is transfer to TlsHelper.
+	 */
 	static void Set(const std::string &name, T *ptr = nullptr);
 
+	/**
+	 * Gets stored value using the given name
+	 *
+	 * @param name Value's name.
+	 *
+	 * @return Value pointer.
+	 */
 	static T* Get(const std::string &name) noexcept;
 private:
-	static SpinLock<> lock;
+	static SpinLock<> lock; /**< Internal lock used for thread safe. */
 
-	static std::map<std::string, std::unique_ptr<boost::thread_specific_ptr<T>>> pointers;
+	static std::map<std::string, std::unique_ptr<boost::thread_specific_ptr<T>>> pointers;  /**< Internal pointer maps. */
 };
 
 template<typename T> SpinLock<> TlsHelper<T>::lock;

@@ -6,18 +6,21 @@
 #include "../../Concurrent/ThreadPool.h"
 
 template<typename ProtocolTraits, const char *LoggerName> TcpChannelBase<ProtocolTraits, LoggerName>::TcpChannelBase(const std::string &remoteAddr
-	, us16 remotePort, us16 localPort, const std::string &localAddr):
-	TcpChannelBase(ProtocolTraits::AddressFromString(remoteAddr), remotePort, localPort, ProtocolTraits::AddressFromString(localAddr))
+	, us16 remotePort, bool openOnConstruct, us16 localPort, const std::string &localAddr):
+	TcpChannelBase(ProtocolTraits::AddressFromString(remoteAddr), remotePort, openOnConstruct, localPort, ProtocolTraits::AddressFromString(localAddr))
 {
 }
 
 template<typename ProtocolTraits, const char *LoggerName>TcpChannelBase<ProtocolTraits, LoggerName>::TcpChannelBase(const typename ProtocolTraits::AddressType &remoteAddr, us16 remotePort
-	, us16 localPort, const typename ProtocolTraits::AddressType &localAddr) 
-	: StreamChannelBase<ProtocolTraits, LoggerName>(std::make_shared<typename ProtocolTraits::StreamType>(ThreadPool::Instance().Service()))
+	, bool openOnConstruct, us16 localPort, const typename ProtocolTraits::AddressType &localAddr)
+	: StreamChannelBase<ProtocolTraits, LoggerName>(std::make_shared<typename ProtocolTraits::StreamType>(ThreadPool::Instance().Context()))
 	, m_localEndPoint(localAddr, localPort), m_remoteEndPoint(remoteAddr, remotePort), m_closed(true)
 {
-	boost::system::error_code error;
-	Open(error);
+	if (openOnConstruct)
+	{
+		boost::system::error_code error;
+		Open(error);
+	}
 }
 
 template<typename ProtocolTraits, const char *LoggerName> TcpChannelBase<ProtocolTraits, LoggerName>::~TcpChannelBase()
@@ -39,7 +42,7 @@ template<typename ProtocolTraits, const char *LoggerName> void TcpChannelBase<Pr
 		Open(err);
 		if(err)
 		{
-			ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler, err));
+			QueueThreadPoolWorkItem(&IAsyncChannelHandler::EndOpen, handler, err);
 		}
 		else
 		{
@@ -59,7 +62,7 @@ template<typename ProtocolTraits, const char *LoggerName> void TcpChannelBase<Pr
 	SpinLock<>::ScopeLock lock(BaseType::m_lock);
 	boost::system::error_code shutdownErr, closeErr;
 	Close(shutdownErr, closeErr);
-	ThreadPool::Instance().QueueWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler, shutdownErr ? shutdownErr : closeErr));
+	QueueThreadPoolWorkItem(&IAsyncChannelHandler::EndClose, handler, shutdownErr ? shutdownErr : closeErr);
 }
 
 template<typename ProtocolTraits, const char *LoggerName> void TcpChannelBase<ProtocolTraits, LoggerName>::Open(boost::system::error_code &error)

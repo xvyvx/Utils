@@ -7,6 +7,7 @@
 #include <bsd/libutil.h>
 #include <memory>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/algorithm/string.hpp>
@@ -15,104 +16,263 @@
 #include <boost/format.hpp>
 #include "../Concurrent/WaitEvent.h"
 #include "IProgressReporter.h"
+#include "SystemdProgressReporter.h"
 #include "../Common/PathHelper.h"
 #include "../Log/Log4cplusCustomInc.h"
 
+/**
+ * Base class for Unix systemV/Linux systemd based application.
+ *
+ * @tparam T Application specific type.
+ * 	T must implete following function:
+ * @code
+ * 	bool Startup(IProgressReporter&, const boost::program_options::variables_map&, log4cplus::Logger&)
+ * 	bool Exit(IProgressReporter&, log4cplus::Logger&);
+ * @endcode
+ * @tparam Proc Instance of T.
+ */
 template<typename T, T *Proc> class ApplicationBase
 {
 public:
+	/**
+	 * Defines an alias representing type of the self
+	 */
 	typedef ApplicationBase<T, Proc> SelfType;
 
-	static constexpr size_t MaxServiceNameLength = 31;
+	static constexpr size_t MaxServiceNameLength = 31;  /**< The maximum service name length */
 
+	/**
+	 * Gets the global instance.
+	 *
+	 * @return Global instance.
+	 */
 	static SelfType& Instance()
 	{
 		return *AppInstance;
 	}
 
+	/**
+	 * Default constructor
+	 */
 	ApplicationBase();
 
+	/**
+	 * Destructor
+	 */
 	~ApplicationBase();
 
+	/**
+	 * Main entry of application execution.
+	 *
+	 * @param argc Argc passed to main.
+	 * @param argv Argv passed to main.
+	 *
+	 * @return Execute result.
+	 */
 	int Run(int argc, char *argv[]);
 
+	/**
+	 * Query command arguments passed from command line.
+	 *
+	 * @return Command arguments.
+	 */
 	const boost::program_options::variables_map& CmdVariables()
 	{
 		return m_vm;
 	}
 
+	/**
+	 * Query installed service name.
+	 *
+	 * @return Installed service name.
+	 */
 	const std::string& ServiceName()
 	{
 		return m_serviceName;
 	}
 
 private:
+	/**
+	 * Defines an alias representing the internal handler.
+	 */
 	typedef int (SelfType::*ParamHandler)();
 
-	ApplicationBase(const ApplicationBase&) = delete;
-
-	ApplicationBase(ApplicationBase&&) = delete;
-
-	ApplicationBase& operator=(const ApplicationBase&) = delete;
-
-	ApplicationBase& operator=(ApplicationBase&&) = delete;
-
-	int HelpFunc();
-
-	int InstallDaemon();
-
-	int UninstallDaemon();
-
-	int UninstallDaemonImpl(const std::string &svcName);
-
-	int RunSvc();
-
-	int RunNormal();
-
-	bool Initialize();
-
-	static void SignalHandler(int sigNum);
-
-	static bool WriteFile(const std::string &content, const std::string &path);
-
-	static std::string ReadFile(const std::string &path);
-
-	static bool RemoveFile(const std::string &path);
-
-	struct ParamEntry
+	/**
+	 * Values that represent daemon types
+	 */
+	enum DaemonType
 	{
-		const char *m_paramName;
-
-		ParamHandler m_handler;
+		DaemonType_None, /**< Running application is not installed a daemon. */
+		DaemonType_SystemV, /**< Running application is installed as a systemV daemon. */
+		DaemonType_Systemd /**< Running application is installed as a systemd daemon. */
 	};
 
-	static constexpr size_t EntrySize = 4;
+	/**
+	 * Copy constructor
+	 *
+	 * @param parameter1 The first parameter.
+	 */
+	ApplicationBase(const ApplicationBase&) = delete;
+
+	/**
+	 * Move constructor
+	 *
+	 * @param [in,out] parameter1 The first parameter.
+	 */
+	ApplicationBase(ApplicationBase&&) = delete;
+
+	/**
+	 * Assignment operator
+	 *
+	 * @param parameter1 The first parameter.
+	 *
+	 * @return Equal to *this.
+	 */
+	ApplicationBase& operator=(const ApplicationBase&) = delete;
+
+	/**
+	 * Move assignment operator
+	 *
+	 * @param [in,out] parameter1 The first parameter.
+	 *
+	 * @return Equal to *this.
+	 */
+	ApplicationBase& operator=(ApplicationBase&&) = delete;
+
+	/**
+	 * Help message print handler.
+	 *
+	 * @return Execute result.
+	 */
+	int HelpFunc();
+
+	/**
+	 * Install daemon handler.
+	 *
+	 * @return Execute result.
+	 */
+	int InstallDaemon();
+
+	/**
+	 * Uninstall daemon handler.
+	 *
+	 * @return Execute result.
+	 */
+	int UninstallDaemon();
+
+	/**
+	 * Uninstall daemon implementation
+	 *
+	 * @param svcName Name of the daemon.
+	 * @param svcType Type of the daemon.
+	 *
+	 * @return Execute result.
+	 */
+	int UninstallDaemonImpl(const std::string &svcName, DaemonType svcType);
+
+	/**
+	 * SystemV daemon execution entry.
+	 *
+	 * @return Execute result.
+	 */
+	int RunSvcSystemV();
+
+	/**
+	 * Systemd daemon execution entry.
+	 *
+	 * @return Execute result.
+	 */
+	int RunSvcSystemd();
+
+	/**
+	 * Normal execution entry(run as a normal console application).
+	 *
+	 * @return Execute result.
+	 */
+	int RunNormal();
+
+	/**
+	 * Initializes execution environment.
+	 *
+	 * @return True if it succeeds, false if it fails.
+	 */
+	bool Initialize();
+
+	/**
+	 * Signal handler entry.
+	 *
+	 * @param sigNum The signal number.
+	 */
+	static void SignalHandler(int sigNum);
+
+	/**
+	 * Writes daemon install information file.
+	 *
+	 * @param content File content.
+	 * @param path Location of the file.
+	 *
+	 * @return True if it succeeds, false if it fails.
+	 */
+	static bool WriteFile(const std::string &content, const std::string &path);
+
+	/**
+	 * Reads daemon install information file.
+	 *
+	 * @param path Location of the file.
+	 *
+	 * @return Content of the file or empty if read failed.
+	 */
+	static std::string ReadFile(const std::string &path);
+
+	/**
+	 * Removes the daemon install information file.
+	 *
+	 * @param path Location of the file.
+	 *
+	 * @return True if it succeeds, false if it fails.
+	 */
+	static bool RemoveFile(const std::string &path);
+
+	/**
+	 * A parameter entry.
+	 */
+	struct ParamEntry
+	{
+		const char *m_paramName;	/**< Name of the parameter. */
+
+		ParamHandler m_handler; /**< The handler. */
+	};
+
+	static constexpr size_t EntrySize = 5;  /**< Size of the entry */
 
 	//如果之保留内联的初始化写法，clang编译通过，但是链接时出现未定义错误（odr use?），gcc、vc++（WinApplicationBase）无问题，所以仍需要外部定义
 	//同时由于如果外部没有定义时出现了链接时未定义错误，因此说明constexpr未起作用（odr use），所以这里虽然是编译时定义的，但是加不加constexpr都无所谓
-	static ParamEntry ParamEntries[EntrySize] =
+	static ParamEntry ParamEntries[EntrySize] = 
 	{
 		{ "help",&SelfType::HelpFunc },
 		{ "install",&SelfType::InstallDaemon },
 		{ "uninstall",&SelfType::UninstallDaemon },
-		{ "svc",&SelfType::RunSvc }
+		{ "svc-systemV",&SelfType::RunSvcSystemV },
+		{ "svc-systemd",&SelfType::RunSvcSystemd }
 	};
 
-	boost::program_options::options_description m_optionsDesc;
+	boost::program_options::options_description m_optionsDesc;  /**< Information describing the command line arguments. */
 
-	boost::program_options::variables_map m_vm;
+	boost::program_options::variables_map m_vm; /**< Command line arguments. */
 
-	pidfh *m_pidFile;
+	pidfh *m_pidFile;   /**< The PID file pointer if execute as systemV daemon. */
 
-	std::unique_ptr<WaitEvent> m_evt;
+	std::unique_ptr<WaitEvent> m_evt;   /**< WaitEvent for internal use.*/
 
-	std::string m_serviceName;
+	std::string m_serviceName;  /**< Installed service name. */
 
-	std::unique_ptr<IProgressReporter> m_reporter;
+	DaemonType m_svcType;   /**< Installed daemon type. */
 
-	static SelfType *AppInstance;
+	std::unique_ptr<IProgressReporter> m_reporter;  /**< Pointer of progress reporter. */
 
-	static log4cplus::Logger log;
+	static SelfType *AppInstance;   /**< Global instance. */
+
+	static log4cplus::Logger log;   /**< The logger. */
 };
 
 template<typename T, T *Proc> typename ApplicationBase<T, Proc>::SelfType *ApplicationBase<T, Proc>::AppInstance = nullptr;
@@ -121,7 +281,8 @@ template<typename T, T *Proc> log4cplus::Logger ApplicationBase<T, Proc>::log = 
 
 template<typename T, T *Proc> typename ApplicationBase<T, Proc>::ParamEntry ApplicationBase<T, Proc>::ParamEntries[EntrySize];
 
-template<typename T, T *Proc> ApplicationBase<T, Proc>::ApplicationBase() : m_optionsDesc("Options"), m_vm(), m_pidFile(nullptr), m_evt(), m_serviceName(), m_reporter(nullptr)
+template<typename T, T *Proc> ApplicationBase<T, Proc>::ApplicationBase() : m_optionsDesc("Options"), m_vm(), m_pidFile(nullptr), m_evt(), m_serviceName(), m_svcType(DaemonType_None)
+	, m_reporter(nullptr)
 {
 	if (AppInstance)
 	{
@@ -130,13 +291,15 @@ template<typename T, T *Proc> ApplicationBase<T, Proc>::ApplicationBase() : m_op
 	AppInstance = this;
 	decltype(m_optionsDesc.add_options()) options = m_optionsDesc.add_options();
 	options("help,h", "produce help message");
-	options("install,i", "install programme as unix daemon");
+	options("install,i", boost::program_options::value<std::string>(), "install programme as unix daemon(alternative values:systemV,systemd)");
 	options("name,n", boost::program_options::value<std::string>(), "optional,set daemon name when install unix daemon");
 	options("disp-name,d", boost::program_options::value<std::string>(), "optional,set daemon description when install unix daemon");
-	options("start-order", boost::program_options::value<int>(), "optional,set daemon script start order number");
-	options("stop-order", boost::program_options::value<int>(), "optional,set daemon script stop order number");
+	options("start-order", boost::program_options::value<int>(), "optional,set daemon script start order number(systemV only)");
+	options("stop-order", boost::program_options::value<int>(), "optional,set daemon script stop order number(systemV only)");
+	options("svc-depends", boost::program_options::value<std::string>(), "optional,set daemon dependencies when install unix daemon(systemd only)");
 	options("uninstall,u", "uninstall installed unix daemon");
-	options("svc", "run programme as unix daemon(used by daemon script,don't use directly)");
+	options("svc-systemV", "run programme as unix daemon(used by daemon script,don't use directly)");
+	options("svc-systemd", "run programme as unix daemon(used by systemd service manager,don't use directly)");
 }
 
 template<typename T, T *Proc> ApplicationBase<T, Proc>::~ApplicationBase()
@@ -196,7 +359,7 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 	return ret;
 }
 
-template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvc()
+template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemV()
 {
 	if (daemon(1, 0) != 0)
 	{
@@ -256,6 +419,42 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvc()
 	return ret;
 }
 
+template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemd()
+{
+	SystemdProgressReporter *report = new SystemdProgressReporter();
+	m_reporter.reset(report);
+	if (!*report)
+	{
+		return 1;
+	}
+	m_reporter->ReportNewStatus(Status_StartPending, 30000);
+	if (!Initialize())
+	{
+		m_reporter->ReportNewStatus(Status_StopPending, 0, 1);
+		return 1;
+	}
+	if (!m_evt)
+	{
+		m_reporter->ReportNewStatus(Status_StopPending, 0, 1);
+		LOG4CPLUS_ERROR(log, "创建控制事件失败。");
+		return 1;
+	}
+	int ret = 0;
+	if (Proc->Startup(*m_reporter, m_vm, log))
+	{
+		m_reporter->ReportNewStatus(Status_Running, 0);
+		m_evt->Wait();
+		Proc->Exit(*m_reporter, log);
+	}
+	else
+	{
+		m_reporter->ReportNewStatus(Status_StopPending, 0, 1);
+		ret = 1;
+		Proc->Exit(*m_reporter, log);
+	}
+	return ret;
+}
+
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::HelpFunc()
 {
 	std::cout << m_optionsDesc << std::endl;
@@ -268,6 +467,15 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 	{
 		return 1;
 	}
+	if (m_svcType != DaemonType_None)
+	{
+		if (UninstallDaemonImpl(m_serviceName, m_svcType) != 0)
+		{
+			LOG4CPLUS_ERROR(log, "卸载已存在服务失败。");
+			return 1;
+		}
+	}
+
 	std::string svcName;
 	if (m_vm["name"].empty())
 	{
@@ -292,38 +500,40 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 		svcDisplayName = m_vm["disp-name"].template as<std::string>();
 	}
 
-	boost::system::error_code err;
-	bool svcExists = boost::filesystem::exists("/etc/init.d/" + svcName, err);
-	if (svcExists&&UninstallDaemonImpl(svcName) != 0)
+	std::string installStr = m_vm["install"].template as<std::string>();
+	if(installStr != "systemV" && installStr != "systemd")
 	{
-		LOG4CPLUS_ERROR(log, "卸载已存在服务失败。");
+		LOG4CPLUS_ERROR(log, "指定了无效的服务安装方式。");
 		return 1;
 	}
 	int startOrder = 80, stopOrder = 1;
-	if (!m_vm["start-order"].empty())
+	std::string depends("");
+	if (installStr == "systemV")
 	{
-		startOrder = m_vm["start-order"].template as<int>();
+		if (!m_vm["start-order"].empty())
+		{
+			startOrder = m_vm["start-order"].template as<int>();
+		}
+		if (!m_vm["stop-order"].empty())
+		{
+			stopOrder = m_vm["stop-order"].template as<int>();
+		}
 	}
-	if (!m_vm["stop-order"].empty())
+	else
 	{
-		stopOrder = m_vm["stop-order"].template as<int>();
+		if (!m_vm["svc-depends"].empty())
+		{
+			depends.assign(" ");
+			depends.append(m_vm["svc-depends"].template as<std::string>());
+		}
 	}
 
 	//TODO 自定义路径
 	std::string path = PathHelper::AppDeployPath();
-	std::string skeletonPath = path;
-	PathHelper::Combine(&skeletonPath, "Configuration", "skeleton", nullptr);
-	boost::filesystem::path filePath(skeletonPath);
-	if (!boost::filesystem::exists(filePath, err))
-	{
-		LOG4CPLUS_ERROR(log, "Daemon模板脚本文件不存在。");
-		return 1;
-	}
-	//TODO 自定义路径
 	std::string daemonPath = PathHelper::AppExecutablePath();
 	std::string installScriptPath = path;
-	PathHelper::Combine(&installScriptPath, "Configuration", (boost::format("install.sh \"%s\" \"%s\" \"%s\" \"%s\" %02d %02d") % svcName % svcDisplayName %daemonPath % path 
-		% startOrder % stopOrder).str().c_str(), nullptr);
+	PathHelper::Combine(&installScriptPath, "Configuration", (boost::format("install.sh %s \"%s\" \"%s\" \"%s\" \"%s\" %02d %02d \"%s\"") % installStr % svcName % svcDisplayName
+		% daemonPath % path % startOrder % stopOrder % depends).str().c_str(), nullptr);
 	int exitCode = system(installScriptPath.c_str());
 	if (exitCode != 0)
 	{
@@ -333,7 +543,10 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 	//TODO 自定义路径
 	std::string nameFilePath = path;
 	PathHelper::Combine(&nameFilePath, "Configuration", "svcname.txt", nullptr);
-	if(!WriteFile(svcName, nameFilePath))
+	std::string fileContent(svcName);
+	fileContent.append("\n");
+	fileContent.append(installStr);
+	if(!WriteFile(fileContent, nameFilePath))
 	{
 		LOG4CPLUS_ERROR(log, "保存服务名失败。");
 		return 1;
@@ -348,20 +561,15 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::UninstallDaemon()
 	{
 		return 1;
 	}
-	//TODO 自定义路径
-	std::string path = PathHelper::AppDeployPath();
-	std::string nameFilePath = path;
-	PathHelper::Combine(&nameFilePath, "Configuration", "svcname.txt", nullptr);
-	std::string svcName = ReadFile(nameFilePath);
-	if (svcName.empty())
+	if (m_serviceName.empty() || (m_svcType != DaemonType_SystemV && m_svcType != DaemonType_Systemd))
 	{
-		LOG4CPLUS_ERROR(log, "读取服务名失败。");
+		LOG4CPLUS_ERROR(log, "读取已安装服务信息失败。");
 		return 1;
 	}
-	return UninstallDaemonImpl(svcName);
+	return UninstallDaemonImpl(m_serviceName, m_svcType);
 }
 
-template<typename T,T *Proc> int ApplicationBase<T,Proc>::UninstallDaemonImpl(const std::string &svcName)
+template<typename T,T *Proc> int ApplicationBase<T,Proc>::UninstallDaemonImpl(const std::string &svcName, DaemonType svcType)
 {
 	//TODO 自定义路径
 	std::string path = PathHelper::AppDeployPath();
@@ -370,7 +578,7 @@ template<typename T,T *Proc> int ApplicationBase<T,Proc>::UninstallDaemonImpl(co
 
 	//TODO 自定义路径
 	std::string uninstallScriptPath = path;
-	PathHelper::Combine(&uninstallScriptPath, "Configuration", (boost::format("uninstall.sh %s") % svcName).str().c_str(), nullptr);
+	PathHelper::Combine(&uninstallScriptPath, "Configuration", (boost::format("uninstall.sh %s %s") % (svcType == DaemonType_SystemV ? "systemV" : "systemd") % svcName).str().c_str(), nullptr);
 	int exitCode = system(uninstallScriptPath.c_str());
 	if (exitCode != 0)
 	{
@@ -386,7 +594,6 @@ template<typename T,T *Proc> int ApplicationBase<T,Proc>::UninstallDaemonImpl(co
 template<typename T,T *Proc> bool ApplicationBase<T,Proc>::Initialize()
 {
 	//TODO 自定义路径
-	m_evt.reset(new WaitEvent());
 	std::string path = PathHelper::AppDeployPath();
 	if (chdir(path.c_str()) != 0)
 	{
@@ -415,11 +622,22 @@ template<typename T,T *Proc> bool ApplicationBase<T,Proc>::Initialize()
 	//TODO 自定义路径
 	std::string nameFilePath = PathHelper::AppDeployPath();
 	PathHelper::Combine(&nameFilePath, "Configuration", "svcname.txt", nullptr);
-	m_serviceName = ReadFile(nameFilePath);
+	std::istringstream fileStream(ReadFile(nameFilePath));
+	std::string tempType;
+	fileStream >> m_serviceName >> tempType;
 	if (m_serviceName.empty())
 	{
 		m_serviceName = T::SvcName();
 	}
+	if (tempType == "systemV")
+	{
+		m_svcType = DaemonType_SystemV;
+	}
+	else if (tempType == "systemd")
+	{
+		m_svcType = DaemonType_Systemd;
+	}
+	m_evt.reset(new WaitEvent());
 	return true;
 }
 

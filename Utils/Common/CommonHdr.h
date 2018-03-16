@@ -38,13 +38,44 @@
 
 #include <stddef.h>
 
+/**
+ * Defines an alias representing the unsigned byte.
+ */
 typedef unsigned char us8;
+
+/**
+ * Defines an alias representing the s signed byte.
+ */
 typedef signed char s8;
+
+/**
+ * Defines an alias representing the unsigned two-bytes.
+ */
 typedef unsigned short us16;
+
+/**
+ * Defines an alias representing the signed two-bytes.
+ */
 typedef signed short s16;
+
+/**
+ * Defines an alias representing the unsigned four-bytes.
+ */
 typedef unsigned int us32;
+
+/**
+ * Defines an alias representing the signed four-bytes.
+ */
 typedef signed int s32;
+
+/**
+ * Defines an alias representing the unsigned eight-bytes.
+ */
 typedef unsigned long long us64;
+
+/**
+ * Defines an alias representing the signed eight-bytes.
+ */
 typedef signed long long s64;
 
 #define IS_LITTLE_ENDIAN

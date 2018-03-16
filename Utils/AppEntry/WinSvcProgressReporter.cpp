@@ -43,7 +43,7 @@ void WinSvcProgressReporter::ReportNewStatus(Status newStatus, int waitHint, us3
 	}
 	else
 	{
-		m_status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+		m_status.dwControlsAccepted = SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_STOP;
 	}
 	SetServiceStatus(m_statusHandle, &m_status);
 }

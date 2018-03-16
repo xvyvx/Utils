@@ -12,6 +12,9 @@ void TcpListenerAcceptEntry(std::shared_ptr<boost::asio::ip::tcp::endpoint> &rem
 
 UTILS_EXPORTS_API void SetListenerAcceptFunc(TcpListenerAcceptFunc *func);
 
+/**
+ * TCP v4 listener.
+ */
 typedef TcpListenerBase<TcpV4Traits, TcpListenerAcceptFunc, TcpListenerAcceptEntry, TcpV4ListenerLoggerName> TcpV4Listener;
 
 extern template class UTILS_DECL_API TcpListenerBase<TcpV4Traits, TcpListenerAcceptFunc, TcpListenerAcceptEntry, TcpV4ListenerLoggerName>;

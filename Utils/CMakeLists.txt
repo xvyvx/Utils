@@ -1,4 +1,4 @@
-SET(UtilSources AppEntry/IProgressReporter.cpp AppEntry/WinSvcProgressReporter.cpp
+SET(UtilSources AppEntry/IProgressReporter.cpp AppEntry/WinSvcProgressReporter.cpp AppEntry/SystemdProgressReporter.cpp
 	Buffer/BinaryHelper.cpp Buffer/CircularBuffer.cpp Buffer/CircularBufferCache.cpp Buffer/LinearBuffer.cpp Buffer/LinearBufferCache.cpp
 	Channel/Common/IAsyncChannel.cpp Channel/Common/IAsyncChannelHandler.cpp Channel/SerialPort/SerialPortChannel.cpp
 	Channel/Tcp/TcpV4Channel.cpp Channel/Tcp/TcpV4Listener.cpp Channel/Tcp/TcpV4PassiveChannel.cpp
@@ -49,7 +49,8 @@ INCLUDE(CMakePackageConfigHelpers)
 EXPORT(TARGETS Utils NAMESPACE Utils:: FILE ${PROJECT_BINARY_DIR}/UtilsTargets.cmake)
 INSTALL(TARGETS Utils EXPORT UtilsTargets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
 INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/Utils DESTINATION include FILES_MATCHING PATTERN *.h PATTERN *Impl.h EXCLUDE)
-INSTALL(FILES ${PROJECT_SOURCE_DIR}/CMake/Findlog4cplus.cmake ${PROJECT_SOURCE_DIR}/CMake/Findotl.cmake DESTINATION lib/cmake/Utils)
+INSTALL(FILES ${PROJECT_SOURCE_DIR}/CMake/FindBoost.cmake ${PROJECT_SOURCE_DIR}/CMake/Findlog4cplus.cmake ${PROJECT_SOURCE_DIR}/CMake/Findotl.cmake
+	DESTINATION lib/cmake/Utils)
 IF(UNIX)
 	INSTALL(FILES ${PROJECT_SOURCE_DIR}/CMake/Findlibbsd.cmake DESTINATION lib/cmake/Utils)
 ENDIF()

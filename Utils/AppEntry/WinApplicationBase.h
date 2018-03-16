@@ -16,72 +16,208 @@
 #include "../Log/Log4cplusCustomInc.h"
 #include <boost/algorithm/string/classification.hpp>
 
+/**
+ * Base class for Windows service based application.
+ *
+ * @tparam T Application specific type.
+ * 	T must implete following function:
+ * @code
+ * 	bool Startup(IProgressReporter&, const boost::program_options::variables_map&, log4cplus::Logger&)
+ * 	bool Exit(IProgressReporter&, log4cplus::Logger&);
+ * @endcode
+ * @tparam Proc Instance of T.
+ */
 template<typename T, T *Proc> class ApplicationBase
 {
 public:
+	/**
+	* Defines an alias representing type of the self
+	*/
 	typedef ApplicationBase<T, Proc> SelfType;
 
-	static constexpr size_t MaxServiceNameLength = 31;
+	static constexpr size_t MaxServiceNameLength = 31; /**< The maximum service name length */
 
+	/**
+	* Gets the global instance.
+	*
+	* @return Global instance.
+	*/
 	static SelfType& Instance()
 	{
 		return *AppInstance;
 	}
 
+	/**
+	 * Default constructor
+	 */
 	ApplicationBase();
 
+	/**
+	 * Destructor
+	 */
 	~ApplicationBase();
 
+	/**
+	 * Main entry of application execution.
+	 *
+	 * @param argc Argc passed to main.
+	 * @param argv Argv passed to main.
+	 *
+	 * @return Execute result.
+	 */
 	int Run(int argc, char *argv[]);
 
+	/**
+	 * Query command arguments passed from command line.
+	 *
+	 * @return Command arguments.
+	 */
 	const boost::program_options::variables_map& CmdVariables()
 	{
 		return m_vm;
 	}
 
+	/**
+	 * Query installed service name.
+	 *
+	 * @return Installed service name.
+	 */
 	const std::string& ServiceName()
 	{
 		return m_serviceName;
 	}
 
 private:
+	/**
+	 * Defines an alias representing the internal handler.
+	 */
 	typedef int (SelfType::*ParamHandler)();
 
+	/**
+	 * Copy constructor
+	 *
+	 * @param parameter1 The first parameter.
+	 */
 	ApplicationBase(const ApplicationBase&) = delete;
 
+	/**
+	 * Move constructor
+	 *
+	 * @param [in,out] parameter1 The first parameter.
+	 */
 	ApplicationBase(ApplicationBase&&) = delete;
 
+	/**
+	 * Assignment operator
+	 *
+	 * @param parameter1 The first parameter.
+	 *
+	 * @return Equal to *this.
+	 */
 	ApplicationBase& operator=(const ApplicationBase&) = delete;
 
+	/**
+	 * Move assignment operator
+	 *
+	 * @param [in,out] parameter1 The first parameter.
+	 *
+	 * @return Equal to *this.
+	 */
 	ApplicationBase& operator=(ApplicationBase&&) = delete;
 
+	/**
+	 * Help message print handler.
+	 *
+	 * @return Execute result.
+	 */
 	int HelpFunc();
 
+	/**
+	 * Install service handler.
+	 *
+	 * @return Execute result.
+	 */
 	int InstallSvc();
 
+	/**
+	 * Uninstall service handler.
+	 *
+	 * @return Execute result.
+	 */
 	int UninstallSvc();
 
+	/**
+	 * Windows service execution entry.
+	 *
+	 * @return Execute result.
+	 */
 	int RunSvc();
 
+	/**
+	 * Normal execution entry(run as a normal console application).
+	 *
+	 * @return Execute result.
+	 */
 	int RunNormal();
 
+	/**
+	 * Writes service install information file.
+	 *
+	 * @param name File content.
+	 *
+	 * @return True if it succeeds, false if it fails.
+	 */
 	static bool WriteSvcNameFile(const std::string &name);
 
+	/**
+	 * Reads service install information file.
+	 *
+	 * @return Content of the file or empty if read failed.
+	 */
 	static std::string ReadSvcNameFile();
 
+	/**
+	 * Removes the service install information file.
+	 *
+	 * @return True if it succeeds, false if it fails.
+	 */
 	static bool RemoveSvcNameFile();
 
+	/**
+	 * Windows service's ServiceMain entry.
+	 *
+	 * @param dwArgc Service arguments count.
+	 * @param lpszArgv Service argument array.
+	 */
 	static void WINAPI ServiceMain(DWORD dwArgc,LPSTR *lpszArgv);
 
+	/**
+	 * Windows service control entry.
+	 *
+	 * @param dwControl The control code.
+	 * @param dwEventType Control event.
+	 * @param lpEventData Information describing the event.
+	 * @param lpContext User defined context.
+	 */
 	static DWORD WINAPI ServiceCtrlHandler(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext);
 
+	/**
+	 * Signal handler entry.
+	 *
+	 * @param dwCtrlType The signal number.
+	 *
+	 * @return Execute result.
+	 */
 	static BOOL WINAPI SignalHandler(DWORD dwCtrlType);
 
+	/**
+	 * A parameter entry.
+	 */
 	struct ParamEntry
 	{
-		const char *m_paramName;
+		const char *m_paramName; /**< Name of the parameter. */
 
-		ParamHandler m_handler;
+		ParamHandler m_handler; /**< The handler. */
 	};
 
 	static constexpr ParamEntry ParamEntries[] =
@@ -92,21 +228,21 @@ private:
 		{ "svc",&SelfType::RunSvc }
 	};
 
-	static constexpr size_t EntrySize = sizeof(ParamEntries) / sizeof(ParamEntry);
+	static constexpr size_t EntrySize = sizeof(ParamEntries) / sizeof(ParamEntry); /**< Size of the entry */
 
-	WaitEvent m_stopEvt;
+	WaitEvent m_stopEvt;	/**< WaitEvent for internal use. */
 
-	boost::program_options::options_description m_optionsDesc;
+	boost::program_options::options_description m_optionsDesc;  /**< Information describing the command line arguments. */
 
-	boost::program_options::variables_map m_vm;
+	boost::program_options::variables_map m_vm; /**< Command line arguments. */
 
-	std::string m_serviceName;
+	std::string m_serviceName;  /**< Installed service name. */
 
-	std::unique_ptr<IProgressReporter> m_reporter;
+	std::unique_ptr<IProgressReporter> m_reporter;  /**< Pointer of progress reporter. */
 
-	static SelfType *AppInstance;
+	static SelfType *AppInstance;   /**< Global instance. */
 
-	static log4cplus::Logger log;
+	static log4cplus::Logger log;   /**< The logger. */
 };
 
 template<typename T, T *Proc> typename ApplicationBase<T, Proc>::SelfType *ApplicationBase<T, Proc>::AppInstance = nullptr;

@@ -46,6 +46,14 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 		us32 temp4 = BinaryHelper::ReadBinData(linearBuf, 3 * i, i, false);
 		BOOST_TEST((temp == 0x01 && temp2 == 0x01 && temp3 == 0x01 && temp4 == 0x01));
 	}
+	for (us8 i = 1; i <= 4; ++i)
+	{
+		us32 unalignData[2] = { 0,0 };
+		us8 *unalignPtr = reinterpret_cast<us8*>(unalignData) + 1;
+		BinaryHelper::SetBinData(unalignPtr, 0, 0x01, i, true);
+		us32 temp = BinaryHelper::ReadBinData(unalignPtr, 0, i, true);
+		BOOST_TEST(temp == 0x01);
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

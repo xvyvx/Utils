@@ -108,32 +108,24 @@ private:
 	};
 
 	/**
-	 * Copy constructor
-	 *
-	 * @param parameter1 The first parameter.
+	 * Copy constructor(deleted)
 	 */
 	ApplicationBase(const ApplicationBase&) = delete;
 
 	/**
-	 * Move constructor
-	 *
-	 * @param [in,out] parameter1 The first parameter.
+	 * Move constructor(deleted)
 	 */
 	ApplicationBase(ApplicationBase&&) = delete;
 
 	/**
-	 * Assignment operator
-	 *
-	 * @param parameter1 The first parameter.
+	 * Assignment operator(deleted)
 	 *
 	 * @return Equal to *this.
 	 */
 	ApplicationBase& operator=(const ApplicationBase&) = delete;
 
 	/**
-	 * Move assignment operator
-	 *
-	 * @param [in,out] parameter1 The first parameter.
+	 * Move assignment operator(deleted)
 	 *
 	 * @return Equal to *this.
 	 */

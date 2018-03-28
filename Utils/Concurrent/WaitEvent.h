@@ -27,34 +27,22 @@ public:
 	~WaitEvent();
 
 	/**
-	 * Copy constructor
-	 *
-	 * @param parameter1 The first parameter.
+	 * Copy constructor(deleted)
 	 */
 	WaitEvent(const WaitEvent&) = delete;
 
 	/**
-	 * Move constructor
-	 *
-	 * @param parameter1 The first parameter.
+	 * Move constructor(deleted)
 	 */
 	WaitEvent(const WaitEvent&&) = delete;
 
 	/**
-	 * Assignment operator
-	 *
-	 * @param parameter1 The first parameter.
-	 *
-	 * @return Equal to *this.
+	 * Assignment operator(deleted)
 	 */
 	WaitEvent& operator=(const WaitEvent&) = delete;
 
 	/**
-	 * Move assignment operator
-	 *
-	 * @param parameter1 The first parameter.
-	 *
-	 * @return Equal to *this.
+	 * Move assignment operator(deleted)
 	 */
 	WaitEvent& operator=(const WaitEvent&&) = delete;
 

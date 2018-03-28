@@ -36,10 +36,12 @@ public:
 	static bool IsAbsolutePath(const char *path, size_t size);
 
 	/**
-	 * 传入的可变参数后必须有一个空指针（0）表示结束
+	 * Combine file/dir names.
+	 * 
+	 * Variable arguments must be end with a null pointer.
 	 *
 	 * @param [in,out] result Combined path result.
-	 * @param ... Variable arguments providing additional file or directory names.
+	 * @param 		   ...    Variable arguments providing additional file or directory names.
 	 */
 	static void Combine(std::string *result,...);
 };

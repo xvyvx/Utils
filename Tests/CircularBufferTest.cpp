@@ -26,6 +26,7 @@ struct CircularBufferGeneralTestFixture
 BOOST_FIXTURE_TEST_CASE(GeneralTest, CircularBufferGeneralTestFixture)
 {
 	CircularBuffer buf(512);
+	const CircularBuffer &constBuf = buf;
 	BufDescriptor bufs[2];
 	size_t bufSize = buf.free_buffers(bufs);
 	BOOST_TEST(bufSize == 1);
@@ -71,33 +72,59 @@ BOOST_FIXTURE_TEST_CASE(GeneralTest, CircularBufferGeneralTestFixture)
 	for (LinearBuffer::size_type i = 0; i < linearBuf.size(); ++i)
 	{
 		BOOST_TEST(buf[i] == linearBuf[i]);
+		BOOST_TEST(constBuf[i] == linearBuf[i]);
 	}
+}
+
+template<typename T> void CircularBufferIteratorTestCore(T &&iter)
+{
+	BOOST_TEST(*(++iter) == 2);
+	BOOST_TEST(*(--iter) == 1);
+	BOOST_TEST(*(iter += 2) == 3);
+	BOOST_TEST(*(iter -= 2) == 1);
+	auto iter2 = iter + 2;
+	BOOST_TEST(*iter2 == 3);
+	iter2 = iter2 - 2;
+	BOOST_TEST(*iter2 == 1);
+	bool result = iter2 - iter2 == 0;
+	BOOST_TEST(result, "iter2 - iter2 == 0");
+	++iter2;
+	result = iter < iter2;
+	BOOST_TEST(result, "iter < iter2");
+}
+
+template<typename T> void CircularBufferReverseIteratorTestCore(T &&iter)
+{
+	BOOST_TEST(*(++iter) == 126);
+	BOOST_TEST(*(--iter) == 127);
+	BOOST_TEST(*(iter += 2) == 125);
+	BOOST_TEST(*(iter -= 2) == 127);
+	auto iter2 = iter + 2;
+	BOOST_TEST(*iter2 == 125);
+	iter2 = iter2 - 2;
+	BOOST_TEST(*iter2 == 127);
+	bool result = iter2 - iter2 == 0;
+	BOOST_TEST(result, "iter2 - iter2 == 0");
+	++iter2;
+	result = iter < iter2;
+	BOOST_TEST(result, "iter < iter2");
 }
 
 BOOST_FIXTURE_TEST_CASE(IteratorTest, CircularBufferGeneralTestFixture)
 {
-	auto iter = m_bufContent.begin();
-	bool result = *(++iter) == 2;
-	BOOST_TEST(result, "*(++iter) == 2");
-	result = *(--iter) == 1;
-	BOOST_TEST(result, "*(--iter) == 1");
-	iter += 2;
-	result = *iter == 3;
-	BOOST_TEST(result, "*iter == 3");
-	iter -= 2;
-	result = *iter == 1;
-	BOOST_TEST(result, "*iter == 1");
-	auto iter2 = iter + 2;
-	result = *iter2 == 3;
-	BOOST_TEST(result, "*iter2 == 3");
-	iter2 = iter2 - 2;
-	result = *iter2 == 1;
-	BOOST_TEST(result, "*iter2 == 1");
-	result = iter2 - iter2 == 0;
-	BOOST_TEST(result, "iter - iter2 == 0");
-	++iter2;
-	result = iter < iter2;
-	BOOST_TEST(result, "iter < iter2");
+	const CircularBuffer &constBuf = m_bufContent;
+	CircularBufferIteratorTestCore(m_bufContent.begin());
+	CircularBufferIteratorTestCore(constBuf.begin());
+	CircularBufferIteratorTestCore(constBuf.cbegin());
+	CircularBufferReverseIteratorTestCore(m_bufContent.rbegin());
+	CircularBufferReverseIteratorTestCore(constBuf.rbegin());
+	CircularBufferReverseIteratorTestCore(constBuf.crbegin());
+	BOOST_TEST(*--m_bufContent.end() == 127);
+	BOOST_TEST(*--constBuf.end() == 127);
+	BOOST_TEST(*--constBuf.cend() == 127);
+	BOOST_TEST(*--m_bufContent.rend() == 1);
+	BOOST_TEST(*--constBuf.rend() == 1);
+	BOOST_TEST(*--constBuf.crend() == 1);
 }
 
 struct CircularBufferCopyCtrlTestFixture
@@ -148,6 +175,45 @@ BOOST_FIXTURE_TEST_CASE(CopyCtrlTest, CircularBufferCopyCtrlTestFixture)
 	buf2 = std::move(buf2);
 	BOOST_TEST(buf2.size() == 129);
 	BOOST_TEST((buf2 == m_bufContent), boost::test_tools::per_element());
+}
+
+struct CircularBufferLogicOperatorTestFixture
+{
+	CircularBuffer m_buf1;
+
+	CircularBuffer m_buf2;
+
+	CircularBufferLogicOperatorTestFixture()
+	{
+		m_buf1.reserve(128);
+		m_buf1.inc_size(128);
+		m_buf2.reserve(128);
+		m_buf2.inc_size(128);
+		for (size_t i = 0; i < m_buf1.size(); ++i)
+		{
+			m_buf1[i] = static_cast<us8>(i + 127);
+			m_buf2[i] = m_buf1[i];
+		}
+	}
+
+	~CircularBufferLogicOperatorTestFixture()
+	{
+	}
+};
+
+BOOST_FIXTURE_TEST_CASE(LogicOperatorTest, CircularBufferLogicOperatorTestFixture)
+{
+	BOOST_TEST(m_buf1 == m_buf2);
+	BOOST_TEST(!(m_buf1 != m_buf2));
+	m_buf1.reserve(m_buf1.size() + 1);
+	m_buf1.inc_size(1);
+	m_buf1[m_buf1.size() - 1] = 255;
+	BOOST_TEST(m_buf1 > m_buf2);
+	BOOST_TEST(m_buf2 < m_buf1);
+	m_buf1.pop_front(1);
+	BOOST_TEST(m_buf2 < m_buf1);
+	BOOST_TEST(!(m_buf1 < m_buf2));
+	BOOST_TEST(!(m_buf1 < m_buf1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -71,34 +71,22 @@ public:
 	~ThreadPool();
 
 	/**
-	 * Copy constructor
-	 *
-	 * @param parameter1 The first parameter.
+	 * Copy constructor(deleted)
 	 */
 	ThreadPool(const ThreadPool&) = delete;
 
 	/**
-	 * Move constructor
-	 *
-	 * @param [in,out] parameter1 The first parameter.
+	 * Move constructor(deleted)
 	 */
 	ThreadPool(ThreadPool&&) = delete;
 
 	/**
-	 * Assignment operator
-	 *
-	 * @param parameter1 The first parameter.
-	 *
-	 * @return Equal to *this.
+	 * Assignment operator(deleted)
 	 */
 	ThreadPool& operator=(const ThreadPool&) = delete;
 
 	/**
-	 * Move assignment operator
-	 *
-	 * @param [in,out] parameter1 The first parameter.
-	 *
-	 * @return Equal to *this.
+	 * Move assignment operator(deleted)
 	 */
 	ThreadPool& operator=(ThreadPool&&) = delete;
 

@@ -56,16 +56,12 @@ public:
 	static void Destory();
 
 	/**
-	 * Copy constructor
-	 *
-	 * @param parameter1 The first parameter.
+	 * Copy constructor(deleted)
 	 */
 	TcpListenerBase(const TcpListenerBase&) = delete;
 
 	/**
-	 * Move constructor
-	 *
-	 * @param [in,out] parameter1 The first parameter.
+	 * Move constructor(deleted)
 	 */
 	TcpListenerBase(TcpListenerBase&&) = delete;
 
@@ -75,20 +71,14 @@ public:
 	~TcpListenerBase();
 
 	/**
-	 * Assignment operator
-	 *
-	 * @param parameter1 The first parameter.
+	 * Assignment operator(deleted)
 	 *
 	 * @return Equal to *this.
 	 */
 	TcpListenerBase& operator=(const TcpListenerBase&) = delete;
 
 	/**
-	 * Move assignment operator
-	 *
-	 * @param [in,out] parameter1 The first parameter.
-	 *
-	 * @return Equal to *this.
+	 * Move assignment operator(deleted)
 	 */
 	TcpListenerBase&& operator=(TcpListenerBase&&) = delete;
 

@@ -196,6 +196,10 @@ void TestAcceptFunc(std::shared_ptr<boost::asio::ip::tcp::endpoint> &remoteEndPo
 		handler->m_channel = channel;
 		channel->AsyncOpen(handler);
 	}
+	else
+	{
+		IAsyncChannel::ptr_t channel(new TcpV4PassiveChannel(sock, *remoteEndPoint));
+	}
 }
 
 void Do()
@@ -207,6 +211,28 @@ class NullHandler :public IAsyncChannelHandler
 public:
 	virtual void EndOpen(const boost::system::error_code &err) override
 	{
+		GlobalWaitEvent.Signal();
+	}
+
+	virtual void EndRead(const boost::system::error_code &err, std::size_t bytesTransferred, void *ctx) override
+	{
+	}
+
+	virtual void EndWrite(const boost::system::error_code &err, std::size_t bytesTransferred, void *ctx) override
+	{
+	}
+
+	virtual void EndClose(const boost::system::error_code &err) override
+	{
+	}
+};
+
+class BindErrorCallbackHandler :public IAsyncChannelHandler
+{
+public:
+	virtual void EndOpen(const boost::system::error_code &err) override
+	{
+		BOOST_TEST(err, "Bind error not happened.");
 		GlobalWaitEvent.Signal();
 	}
 
@@ -235,6 +261,11 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address_v4::from_string("0.0.0.0"), 8009);
 	BOOST_TEST(TcpV4Listener::Instance().AddListenEndPoint(ep), "Add test end point error.");
 	TcpV4Listener::Instance().RemoveListenerEndPoint(ep);
+	BOOST_TEST(!TcpV4Listener::Instance().AddListenEndPoints(
+		{
+			{ boost::asio::ip::address_v4::from_string("127.0.0.1"),9001 },
+			{ boost::asio::ip::address_v4::from_string("127.0.0.1"),8002 }
+		}), "Add same end point error not happened.");
 
 	GlobalBarrier.ResetTaskCount(2);
 	GlobalBarrier.Reset();
@@ -246,9 +277,14 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 	}
 	GlobalBarrier.WaitAllFinished();
 
+	BOOST_TEST(GlobalWaitEvent);
 	{
 		TcpV4Channel channel("127.0.0.1", 8001, false, 8003, "127.0.0.1");
 		IAsyncChannelHandler::ptr_t handler(new NullHandler());
+		channel.AsyncOpen(handler);
+		GlobalWaitEvent.Wait();
+		TcpV4Channel errChannel("127.0.0.1", 8001, false, 8003, "127.0.0.1");
+		IAsyncChannelHandler::ptr_t errHandler(new BindErrorCallbackHandler());
 		channel.AsyncOpen(handler);
 		GlobalWaitEvent.Wait();
 	}

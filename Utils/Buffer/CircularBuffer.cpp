@@ -4,64 +4,6 @@
 #include <algorithm>
 #include "../Common/RunTimeLibraryHelper.h"
 
-CircularBufferIterator& CircularBufferIterator::operator++()
-{
-	++m_index;
-	return *this;
-}
-
-CircularBufferIterator& CircularBufferIterator::operator--()
-{
-	--m_index;
-	return *this;
-}
-
-CircularBufferIterator& CircularBufferIterator::operator+=(difference_type diff)
-{
-	m_index += diff;
-	return *this;
-}
-
-CircularBufferIterator& CircularBufferIterator::operator-=(difference_type diff)
-{
-	m_index -= diff;
-	return *this;
-}
-
-CircularBufferIterator::reference CircularBufferIterator::operator[](size_t index)
-{
-	return m_buf->operator[](index);
-}
-
-bool operator==(const CircularBufferIterator &lhs, const CircularBufferIterator &rhs)
-{
-	return lhs.Equal(rhs);
-}
-
-CircularBufferIterator operator+(const CircularBufferIterator &lhs, CircularBufferIterator::difference_type diff)
-{
-	CircularBufferIterator ret = lhs;
-	ret += diff;
-	return ret;
-}
-
-CircularBufferIterator operator-(const CircularBufferIterator &lhs, CircularBufferIterator::difference_type diff)
-{
-	CircularBufferIterator ret = lhs;
-	ret -= diff;
-	return ret;
-}
-
-CircularBufferIterator::difference_type operator-(const CircularBufferIterator &lhs, const CircularBufferIterator &rhs)
-{
-	return lhs.Index() - rhs.Index();
-}
-
-bool operator<(const CircularBufferIterator &lhs, const CircularBufferIterator &rhs)
-{
-	return lhs.Index() < rhs.Index();
-}
-
 CircularBuffer::CircularBuffer(size_t capacity) :m_buf(capacity ? new us8[capacity] : nullptr), m_beg(m_buf), m_subSize(0), m_capacity(capacity)
 {
 }
@@ -115,14 +57,64 @@ us8& CircularBuffer::operator[](size_t index)
 	return m_beg + index < end ? m_beg[index] : m_buf[index - (end - m_beg)];
 }
 
-CircularBufferIterator CircularBuffer::begin()
+CircularBuffer::iterator CircularBuffer::begin()
 {
-	return CircularBufferIterator(0, this);
+	return CircularBuffer::iterator(0, this);
 }
 
-CircularBufferIterator CircularBuffer::end()
+CircularBuffer::const_iterator CircularBuffer::begin() const
 {
-	return CircularBufferIterator(static_cast<CircularBufferIterator::difference_type>(size()), this);
+	return cbegin();
+}
+
+CircularBuffer::const_iterator CircularBuffer::cbegin() const
+{
+	return CircularBuffer::const_iterator(0, this);
+}
+
+CircularBuffer::reverse_iterator CircularBuffer::rbegin()
+{
+	return CircularBuffer::reverse_iterator(end());
+}
+
+CircularBuffer::const_reverse_iterator CircularBuffer::rbegin() const
+{
+	return crbegin();
+}
+
+CircularBuffer::const_reverse_iterator CircularBuffer::crbegin() const
+{
+	return CircularBuffer::const_reverse_iterator(cend());
+}
+
+CircularBuffer::iterator CircularBuffer::end()
+{
+	return CircularBuffer::iterator(static_cast<difference_type>(size()), this);
+}
+
+CircularBuffer::const_iterator CircularBuffer::end() const
+{
+	return cend();
+}
+
+CircularBuffer::const_iterator CircularBuffer::cend() const
+{
+	return CircularBuffer::const_iterator(static_cast<difference_type>(size()), this);
+}
+
+CircularBuffer::reverse_iterator CircularBuffer::rend()
+{
+	return CircularBuffer::reverse_iterator(begin());
+}
+
+CircularBuffer::const_reverse_iterator CircularBuffer::rend() const
+{
+	return crend();
+}
+
+CircularBuffer::const_reverse_iterator CircularBuffer::crend() const
+{
+	return CircularBuffer::const_reverse_iterator(begin());
 }
 
 void CircularBuffer::reserve(std::size_t newCapacity)

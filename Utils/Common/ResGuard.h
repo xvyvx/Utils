@@ -22,9 +22,7 @@ public:
 	ResGuard(T obj, D deleter);
 
 	/**
-	 * Copy constructor
-	 *
-	 * @param parameter1 The first parameter.
+	 * Copy constructor(deleted)
 	 */
 	ResGuard(const ResGuard&) = delete;
 
@@ -41,11 +39,7 @@ public:
 	~ResGuard();
 
 	/**
-	 * Assignment operator
-	 *
-	 * @param parameter1 The first parameter.
-	 *
-	 * @return A shallow copy of this object.
+	 * Assignment operator(deleted)
 	 */
 	ResGuard& operator=(const ResGuard&) = delete;
 

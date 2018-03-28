@@ -30,6 +30,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteTest)
 	LinearBuffer buf512;
 	BOOST_TEST(buf512.capacity() == 0);
 	buf512.reserve(512);
+	buf512.assign({ 1,2,3 });
+	BOOST_TEST((buf512.size() == 3 && buf512[0] == 1 && buf512[1] == 2 && buf512[2] == 3));
+	buf512.clear();
 	buf512.assign(511, 10);
 	BOOST_TEST(buf512.size() == 511);
 	BOOST_TEST((buf512.front() == 10 && buf512.back() == 10 && buf512.at(0) == 10 && buf512[510] == 10 && *buf512.data() == 10));
@@ -55,6 +58,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteTest)
 	BOOST_TEST((buf512[1] == 2 && buf512[2] == 2));
 	buf512.insert(buf512.begin() + 1, { 3,3,3 });
 	BOOST_TEST((buf512[1] == 3 && buf512[2] == 3 && buf512[3] == 3));
+	buf512.resize(2, 0);
+	BOOST_TEST((buf512[0] == 100 && buf512[1] == 3));
 	buf512.clear();
 	BOOST_TEST((buf512.empty() && buf512.size() == 0 && buf512.capacity() == 512 && buf512.max_size() == buf512.capacity()));
 }

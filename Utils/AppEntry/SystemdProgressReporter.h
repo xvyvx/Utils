@@ -19,9 +19,7 @@ public:
 	SystemdProgressReporter();
 
 	/**
-	 * Copy constructor
-	 *
-	 * @param parameter1 The first parameter.
+	 * Copy constructor(deleted)
 	 */
 	SystemdProgressReporter(const SystemdProgressReporter&) = delete;
 
@@ -38,11 +36,7 @@ public:
 	virtual ~SystemdProgressReporter();
 
 	/**
-	 * Assignment operator
-	 *
-	 * @param parameter1 The first parameter.
-	 *
-	 * @return Equal to *this.
+	 * Assignment operator(deleted)
 	 */
 	SystemdProgressReporter& operator=(const SystemdProgressReporter&) = delete;
 

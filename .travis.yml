@@ -33,7 +33,8 @@ install:
   - |
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
       sudo apt-get -qq install -y unzip libbsd-dev socat
-      sudo socat -d -d pty,raw,nonblock,echo=0,link=/ttyV1 pty,raw,nonblock,echo=0,link=/ttyV2 &
+      mkdir $TRAVIS_BUILD_DIR/build
+      socat -d -d pty,raw,nonblock,echo=0,link=$TRAVIS_BUILD_DIR/build/ttyV1 pty,raw,nonblock,echo=0,link=$TRAVIS_BUILD_DIR/build/ttyV2 &
       mkdir $THIRD_DIR
       cd $THIRD_DIR
       wget --no-check-certificate --quiet https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2
@@ -46,7 +47,6 @@ install:
       make && sudo make install && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
       cd $THIRD_DIR
       mkdir otl && cd otl && wget -q http://otl.sourceforge.net/otlv4_h2.zip && unzip -q otlv4_h2.zip
-      cd $TRAVIS_BUILD_DIR
     else
       brew upgrade cmake || brew install cmake
       brew install boost log4cplus
@@ -59,8 +59,7 @@ install:
   - cmake --version
 
 before_script:
-  - mkdir build
-  - cd ./build
+  - cd $TRAVIS_BUILD_DIR/build
   - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then export COVERAGE_FLAGS="--coverage"; fi
   - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="$COVERAGE_FLAGS" -DBOOST_INCLUDEDIR="$THIRD_DIR/boost_1_66_0" -DBOOST_LIBRARYDIR="$THIRD_DIR/boost_1_66_0/stage/lib" -DCMAKE_BUILD_TYPE=$CONFIG ..
 

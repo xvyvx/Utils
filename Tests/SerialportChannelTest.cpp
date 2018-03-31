@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 #if defined(IS_WINDOWS)
 	"COM1",
 #elif defined(linux) || defined(__linux)
-	"/ttyV1",
+	"./ttyV1",
 #else
 	#error Unsupportted platform.
 #endif
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 #if defined(IS_WINDOWS)
 	setting2.m_deviceName = "COM2";
 #elif defined(linux) || defined(__linux)
-	setting2.m_deviceName = "/ttyV2";
+	setting2.m_deviceName = "./ttyV2";
 #else
 	#error Unsupportted platform.
 #endif

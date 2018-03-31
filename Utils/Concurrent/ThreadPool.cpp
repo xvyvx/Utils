@@ -13,7 +13,12 @@ int ThreadPool::ThreadMaxCount = 0;
 ThreadPool::ThreadPool() :m_currentThreadCount(0), m_threadBusyCount(0), m_tls(), m_context(), m_workGuard(boost::asio::make_work_guard(m_context))
 {
 	int hint = boost::thread::hardware_concurrency();
-	int threadCount = hint == 1 ? 4 : hint * 3;
+	int threadCount = hint * 3;
+	if (hint == 1)
+	{
+		hint = 2;
+		threadCount = 4;
+	}
 	ThreadMinCount = hint;
 	ThreadMaxCount = threadCount;
 	for (int i = 0; i < hint; ++i)

@@ -32,7 +32,8 @@ install:
   - THIRD_DIR="$TRAVIS_BUILD_DIR/3rd"
   - |
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
-      sudo apt-get -qq install -y unzip libbsd-dev
+      sudo apt-get -qq install -y unzip libbsd-dev socat
+      sudo socat -d -d pty,raw,nonblock,echo=0,link=/ttyV1 pty,raw,nonblock,echo=0,link=/ttyV2 &
       mkdir $THIRD_DIR
       cd $THIRD_DIR
       wget --no-check-certificate --quiet https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2

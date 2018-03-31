@@ -17,7 +17,7 @@ class Port1Handler :public std::enable_shared_from_this<Port1Handler>, public IA
 public:
 	IAsyncChannel *m_channel;
 
-	std::shared_ptr<LinearBuffer> m_sendBuf{ new LinearBuffer() };
+	std::shared_ptr<LinearBuffer> m_sendBuf{ new LinearBuffer(12) };
 
 	us8 m_readBuf[12];
 
@@ -59,7 +59,7 @@ class Port2Handler :public std::enable_shared_from_this<Port2Handler>, public IA
 public:
 	IAsyncChannel * m_channel;
 
-	std::shared_ptr<LinearBuffer> m_sendBuf{ new LinearBuffer() };
+	std::shared_ptr<LinearBuffer> m_sendBuf{ new LinearBuffer(12) };
 
 	us8 m_readBuf[12];
 
@@ -96,7 +96,6 @@ public:
 
 BOOST_AUTO_TEST_CASE(GeneralTest)
 {
-#if 0
 	ThreadPool::Instance();
 	SerialPortSettings setting1 = 
 	{
@@ -121,16 +120,18 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 #else
 	#error Unsupportted platform.
 #endif
-	SerialPortChannel port1(setting1);
+	SerialPortChannel::ptr_t port1(new SerialPortChannel(setting1));
 	Port1Handler::ptr_t handler1(new Port1Handler());
-	static_cast<Port1Handler*>(handler1.get())->m_channel = &port1;
-	SerialPortChannel port2(setting2);
+	static_cast<Port1Handler*>(handler1.get())->m_channel = port1.get();
+	SerialPortChannel::ptr_t port2(new SerialPortChannel(setting2));
 	Port2Handler::ptr_t handler2(new Port2Handler());
-	static_cast<Port2Handler*>(handler2.get())->m_channel = &port2;
-	port1.AsyncOpen(handler1);
-	port2.AsyncOpen(handler2);
+	static_cast<Port2Handler*>(handler2.get())->m_channel = port2.get();
+	port1->AsyncOpen(handler1);
+	port2->AsyncOpen(handler2);
 	GlobalSerialPortBarrier.WaitAllFinished();
-#endif
+
+	ThreadPool::Instance().Stop();
+	ThreadPool::Destory();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

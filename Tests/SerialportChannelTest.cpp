@@ -1,6 +1,11 @@
 #if defined(linux) || defined(__linux)
 
+#if defined(linux) || defined(__linux)
+#include <stdlib.h>
+#endif
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/date_time.hpp>
 #include "Concurrent/ThreadPool.h"
 #include "Concurrent/WaitEvent.h"
 #include "Concurrent/TaskBarrier.h"
@@ -96,6 +101,14 @@ public:
 
 BOOST_AUTO_TEST_CASE(GeneralTest)
 {
+#if defined(linux) || defined(__linux)
+	int exitCode = system("socat -d -d pty,raw,nonblock,echo=0,link=./ttyV1 pty,raw,nonblock,echo=0,link=./ttyV2 &");
+	BOOST_TEST((WIFEXITED(exitCode) && WEXITSTATUS(exitCode) == 0));
+	while (!boost::filesystem::exists("./ttyV1") || !boost::filesystem::exists("./ttyV2"))
+	{
+		boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+	}
+#endif
 	ThreadPool::Instance();
 	SerialPortSettings setting1 = 
 	{
@@ -129,6 +142,11 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
 	port1->AsyncOpen(handler1);
 	port2->AsyncOpen(handler2);
 	GlobalSerialPortBarrier.WaitAllFinished();
+
+#if defined(linux) || defined(__linux)
+	exitCode = system("killall socat");
+	BOOST_TEST((WIFEXITED(exitCode) && WEXITSTATUS(exitCode) == 0));
+#endif
 
 	ThreadPool::Instance().Stop();
 	ThreadPool::Destory();

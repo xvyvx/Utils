@@ -33,8 +33,6 @@ install:
   - |
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
       sudo apt-get -qq install -y unzip libbsd-dev socat
-      mkdir $TRAVIS_BUILD_DIR/build
-      socat -d -d pty,raw,nonblock,echo=0,link=$TRAVIS_BUILD_DIR/build/ttyV1 pty,raw,nonblock,echo=0,link=$TRAVIS_BUILD_DIR/build/ttyV2 &
       mkdir $THIRD_DIR
       cd $THIRD_DIR
       wget --no-check-certificate --quiet https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2
@@ -59,7 +57,8 @@ install:
   - cmake --version
 
 before_script:
-  - cd $TRAVIS_BUILD_DIR/build
+  - cd $TRAVIS_BUILD_DIR
+  - mkdir build && cd ./build
   - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then export COVERAGE_FLAGS="--coverage"; fi
   - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="$COVERAGE_FLAGS" -DBOOST_INCLUDEDIR="$THIRD_DIR/boost_1_66_0" -DBOOST_LIBRARYDIR="$THIRD_DIR/boost_1_66_0/stage/lib" -DCMAKE_BUILD_TYPE=$CONFIG ..
 

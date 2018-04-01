@@ -217,6 +217,16 @@ private:
 	static std::string ReadFile(const std::string &path);
 
 	/**
+	 * Gets a child process execute result.
+	 *
+	 * @param exitCode The system function return value.
+	 * @param ctx	   log context text.
+	 *
+	 * @return True if child process execute succeeds, false if it fails.
+	 */
+	static bool GetChildExecResult(int exitCode, const char *ctx);
+
+	/**
 	 * Removes the daemon install information file.
 	 *
 	 * @param path Location of the file.
@@ -527,9 +537,8 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 	PathHelper::Combine(&installScriptPath, "Configuration", (boost::format("install.sh %s \"%s\" \"%s\" \"%s\" \"%s\" %02d %02d \"%s\"") % installStr % svcName % svcDisplayName
 		% daemonPath % path % startOrder % stopOrder % depends).str().c_str(), nullptr);
 	int exitCode = system(installScriptPath.c_str());
-	if (exitCode != 0)
+	if (!GetChildExecResult(exitCode, "执行安装脚本"))
 	{
-		LOG4CPLUS_ERROR_FMT(log, "执行安装脚本失败，退出码：%d", exitCode);
 		return 1;
 	}
 	//TODO 自定义路径
@@ -572,9 +581,8 @@ template<typename T,T *Proc> int ApplicationBase<T,Proc>::UninstallDaemonImpl(co
 	std::string uninstallScriptPath = path;
 	PathHelper::Combine(&uninstallScriptPath, "Configuration", (boost::format("uninstall.sh %s %s") % (svcType == DaemonType_SystemV ? "systemV" : "systemd") % svcName).str().c_str(), nullptr);
 	int exitCode = system(uninstallScriptPath.c_str());
-	if (exitCode != 0)
+	if (!GetChildExecResult(exitCode, "执行卸载脚本"))
 	{
-		LOG4CPLUS_ERROR_FMT(log, "执行卸载脚本失败，退出码：%d。", exitCode);
 		return 1;
 	}
 
@@ -714,6 +722,38 @@ template<typename T, T *Proc> bool ApplicationBase<T, Proc>::RemoveFile(const st
 	{
 		return true;
 	}
+}
+
+template<typename T, T *Proc> bool ApplicationBase<T, Proc>::GetChildExecResult(int exitCode, const char *ctx)
+{
+	if (exitCode != -1)
+	{
+		if (WIFEXITED(exitCode))
+		{
+			exitCode = WEXITSTATUS(exitCode);
+			if (exitCode != 0)
+			{
+				LOG4CPLUS_ERROR_FMT(log, "%s失败，退出码：%d", exitCode);
+				return false;
+			}
+		}
+		else if(WIFSIGNALED(exitCode))
+		{
+			LOG4CPLUS_ERROR_FMT(log, "%s未正常退出（未捕获信号），终止信号：%d", ctx, WTERMSIG(exitCode));
+			return false;
+		}
+		else
+		{
+			LOG4CPLUS_ERROR_FMT(log, "%s未知错误，退出码：%d", ctx, exitCode);
+			return false;
+		}
+	}
+	else
+	{
+		LOG4CPLUS_ERROR_FMT(log, "system%s启动失败。", ctx);
+		return false;
+	}
+	return true;
 }
 
 #endif /* UNIXAPPLICATIONBASE_H */

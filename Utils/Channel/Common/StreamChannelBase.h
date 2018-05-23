@@ -52,7 +52,7 @@ private:
 
 		void *m_ctx;	/**< Request's user defined context data. */
 
-		std::shared_ptr<WrReq> m_next;  /**< Next write request(used as a linked list). */
+		std::unique_ptr<WrReq> m_next;  /**< Next write request(used as a linked list). */
 	} *m_lastWrReq; /**< Last write request in this channel's write linked list. */
 
 	/**
@@ -62,7 +62,7 @@ private:
 	 * @param err Result of operation.
 	 * @param bytesTransferred Number of bytes written from the wrReq.
 	 */
-	void EndWrite(std::shared_ptr<WrReq> wrReq, const boost::system::error_code &err, std::size_t bytesTransferred);
+	void EndWrite(std::unique_ptr<WrReq> &wrReq, const boost::system::error_code &err, std::size_t bytesTransferred);
 };
 
 #endif /* STREAMCHANNELBASE_H */

@@ -733,7 +733,7 @@ template<typename T, T *Proc> bool ApplicationBase<T, Proc>::GetChildExecResult(
 			exitCode = WEXITSTATUS(exitCode);
 			if (exitCode != 0)
 			{
-				LOG4CPLUS_ERROR_FMT(log, "%s失败，退出码：%d", exitCode);
+				LOG4CPLUS_ERROR_FMT(log, "%s失败，退出码：%d", ctx, exitCode);
 				return false;
 			}
 		}

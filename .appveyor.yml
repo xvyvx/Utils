@@ -28,9 +28,9 @@ install:
 before_build:
   - |
     cd %APPVEYOR_BUILD_FOLDER% && mkdir build && cd build
-    if "%PLATFORM%"=="x86" set boost_lib_path=C:\Libraries\boost_1_66_0\lib32-msvc-14.1
-    if "%PLATFORM%"=="x64" set boost_lib_path=C:\Libraries\boost_1_66_0\lib64-msvc-14.1
-    cmake -G "%generator%" -DCMAKE_CONFIGURATION_TYPES=%CONFIG% -DBOOST_INCLUDEDIR=C:\Libraries\boost_1_66_0 -DBOOST_LIBRARYDIR=%boost_lib_path% -Dlog4cplus_INCLUDEDIR=%APPVEYOR_BUILD_FOLDER%\3rd\log4cplus-REL_1_2_0\include\ -Dlog4cplus_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\3rd\log4cplus-REL_1_2_0\build\src\ -Dotl_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\3rd\ -Dotl_VERSION_MAJOR=4 ..
+    if "%PLATFORM%"=="x86" set boost_lib_path=C:\Libraries\boost_1_67_0\lib32-msvc-14.1
+    if "%PLATFORM%"=="x64" set boost_lib_path=C:\Libraries\boost_1_67_0\lib64-msvc-14.1
+    cmake -G "%generator%" -DCMAKE_CONFIGURATION_TYPES=%CONFIG% -DBOOST_INCLUDEDIR=C:\Libraries\boost_1_67_0 -DBOOST_LIBRARYDIR=%boost_lib_path% -Dlog4cplus_INCLUDEDIR=%APPVEYOR_BUILD_FOLDER%\3rd\log4cplus-REL_1_2_0\include\ -Dlog4cplus_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\3rd\log4cplus-REL_1_2_0\build\src\ -Dotl_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\3rd\ -Dotl_VERSION_MAJOR=4 ..
 
 build_script:
   - cmake --build . --config %CONFIG% && ctest --build-config %CONFIG% --output-on-failure

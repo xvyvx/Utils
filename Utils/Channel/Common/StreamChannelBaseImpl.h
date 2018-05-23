@@ -31,27 +31,29 @@ template<typename StreamTraits, const char *LoggerName> void StreamChannelBase<S
 	SpinLock<>::ScopeLock lock(m_lock);
 	if (m_lastWrReq)
 	{
-		m_lastWrReq->m_next = std::shared_ptr<WrReq>(new WrReq{ handler,buf,ctx,nullptr });
+		m_lastWrReq->m_next = std::unique_ptr<WrReq>(new WrReq{ handler,buf,ctx,nullptr });
 		m_lastWrReq = m_lastWrReq->m_next.get();
 	}
 	else
 	{
-		std::shared_ptr<WrReq> req = std::shared_ptr<WrReq>(new WrReq{ handler,buf,ctx,nullptr });
+		std::unique_ptr<WrReq> req(new WrReq{ handler,buf,ctx,nullptr });
 		m_lastWrReq = req.get();
 		boost::asio::async_write(*m_stream, boost::asio::buffer(buf->data(), buf->size()), std::bind(&StreamChannelBase<StreamTraits, LoggerName>::EndWrite
-			, StreamChannelBase<StreamTraits, LoggerName>::shared_from_this(), req, std::placeholders::_1, std::placeholders::_2));
+			, StreamChannelBase<StreamTraits, LoggerName>::shared_from_this(), std::move(req), std::placeholders::_1, std::placeholders::_2));
 	}
 }
 
-template<typename StreamTraits, const char *LoggerName> void StreamChannelBase<StreamTraits, LoggerName>::EndWrite(std::shared_ptr<WrReq> wrReq
+template<typename StreamTraits, const char *LoggerName> void StreamChannelBase<StreamTraits, LoggerName>::EndWrite(std::unique_ptr<WrReq> &wrReq
 	, const boost::system::error_code &err, std::size_t bytesTransferred)
 {
 	{
 		SpinLock<>::ScopeLock lock(m_lock);
 		if (wrReq->m_next)
 		{
-			boost::asio::async_write(*m_stream, boost::asio::buffer(wrReq->m_next->m_buf->data(), wrReq->m_next->m_buf->size())
-				, std::bind(&StreamChannelBase<StreamTraits, LoggerName>::EndWrite, StreamChannelBase<StreamTraits, LoggerName>::shared_from_this(), wrReq->m_next
+			us8* buffer = wrReq->m_next->m_buf->data();
+			size_t bufferSize = wrReq->m_next->m_buf->size();
+			boost::asio::async_write(*m_stream, boost::asio::buffer(buffer, bufferSize)
+				, std::bind(&StreamChannelBase<StreamTraits, LoggerName>::EndWrite, StreamChannelBase<StreamTraits, LoggerName>::shared_from_this(), std::move(wrReq->m_next)
 				, std::placeholders::_1, std::placeholders::_2));
 		}
 		else

@@ -11,9 +11,18 @@
 #undef  _UNICODE
 #endif
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored  "-Wdeprecated-declarations"
+#endif
+
 #include <log4cplus/logger.h>  
 #include <log4cplus/configurator.h>
 #include <log4cplus/loggingmacros.h>
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 #if defined (LOG4CPLUS_CUSTOM_UNDEF_UNICODE)
 #define UNICODE

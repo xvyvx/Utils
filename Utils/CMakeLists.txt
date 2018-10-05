@@ -8,10 +8,14 @@ SET(UtilSources AppEntry/IProgressReporter.cpp AppEntry/WinSvcProgressReporter.c
 	Database/SQL/OCI/OCISqlDatabase.cpp
 	Diagnostics/DiagnosticsHelper.cpp)
 
+	INCLUDE(GNUInstallDirs)
+	SET(InstIncludeDir ${CMAKE_INSTALL_INCLUDEDIR})
+	SET(InstLibDir ${CMAKE_INSTALL_LIBDIR})
+
 SET(UtilsVersion 1.0)
 SET(UtilsSoVersion 1)
 ADD_LIBRARY(Utils SHARED ${UtilSources})
-TARGET_INCLUDE_DIRECTORIES(Utils INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
+TARGET_INCLUDE_DIRECTORIES(Utils INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> $<INSTALL_INTERFACE:${InstIncludeDir}>)
 SET_TARGET_PROPERTIES(Utils PROPERTIES VERSION ${UtilsVersion} SOVERSION ${UtilsSoVersion} CXX_VISIBILITY_PRESET hidden)
 TARGET_COMPILE_DEFINITIONS(Utils INTERFACE -DUTILS_IMPORTS PRIVATE -DUTILS_EXPORTS)
 TARGET_COMPILE_FEATURES(Utils PUBLIC cxx_std_11)
@@ -47,14 +51,17 @@ ENDIF()
 
 INCLUDE(CMakePackageConfigHelpers)
 EXPORT(TARGETS Utils NAMESPACE Utils:: FILE ${PROJECT_BINARY_DIR}/UtilsTargets.cmake)
-INSTALL(TARGETS Utils EXPORT UtilsTargets ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
-INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/Utils DESTINATION include FILES_MATCHING PATTERN *.h PATTERN *Impl.h EXCLUDE)
+INSTALL(TARGETS Utils EXPORT UtilsTargets ARCHIVE DESTINATION ${InstLibDir} LIBRARY DESTINATION ${InstLibDir}
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/Utils DESTINATION ${InstIncludeDir} FILES_MATCHING PATTERN *.h PATTERN *Impl.h EXCLUDE)
 INSTALL(FILES ${PROJECT_SOURCE_DIR}/CMake/FindBoost.cmake ${PROJECT_SOURCE_DIR}/CMake/Findlog4cplus.cmake ${PROJECT_SOURCE_DIR}/CMake/Findotl.cmake
-	DESTINATION lib/cmake/Utils)
+	DESTINATION ${InstLibDir}/cmake/Utils)
 IF(UNIX)
-	INSTALL(FILES ${PROJECT_SOURCE_DIR}/CMake/Findlibbsd.cmake DESTINATION lib/cmake/Utils)
+	INSTALL(FILES ${PROJECT_SOURCE_DIR}/CMake/Findlibbsd.cmake DESTINATION ${InstLibDir}/cmake/Utils)
 ENDIF()
+configure_package_config_file(${PROJECT_SOURCE_DIR}/CMake/UtilsConfig.cmake.in ${PROJECT_BINARY_DIR}/Utils/UtilsConfig.cmake
+	INSTALL_DESTINATION ${InstLibDir}/cmake/Utils PATH_VARS InstIncludeDir InstLibDir)
 write_basic_package_version_file("${PROJECT_BINARY_DIR}/Utils/UtilsConfigVersion.cmake" VERSION ${UtilsVersion} COMPATIBILITY AnyNewerVersion)
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/CMake/UtilsConfig.cmake.in "${PROJECT_BINARY_DIR}/Utils/UtilsConfig.cmake" @ONLY)
-INSTALL(EXPORT UtilsTargets DESTINATION lib/cmake/Utils FILE UtilsTargets.cmake)
-INSTALL(FILES "${PROJECT_BINARY_DIR}/Utils/UtilsConfigVersion.cmake" "${PROJECT_BINARY_DIR}/Utils/UtilsConfig.cmake" DESTINATION lib/cmake/Utils)
+SET(ExportFileName UtilsTargets.cmake)
+INSTALL(EXPORT UtilsTargets DESTINATION ${InstLibDir}/cmake/Utils FILE ${ExportFileName})
+INSTALL(FILES ${PROJECT_BINARY_DIR}/Utils/UtilsConfigVersion.cmake ${PROJECT_BINARY_DIR}/Utils/UtilsConfig.cmake DESTINATION ${InstLibDir}/cmake/Utils)

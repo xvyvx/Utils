@@ -151,6 +151,13 @@ private:
 	int RunNormal();
 
 	/**
+	* Initializes execution environment.
+	*
+	* @return True if it succeeds, false if it fails.
+	*/
+	bool Initialize();
+
+	/**
 	 * Writes service install information file.
 	 *
 	 * @param name File content.
@@ -263,11 +270,6 @@ template<typename T, T *Proc> ApplicationBase<T,Proc>::~ApplicationBase()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::Run(int argc, char *argv[])
 {
-	std::string path = PathHelper::AppDeployPath();
-	//TODO 自定义路径
-	PathHelper::Combine(&path, "Configuration", "log4cplus.properties", 0);
-	log4cplus::ConfigureAndWatchThread watchThread(path, 6000);
-
 	boost::program_options::store(boost::program_options::parse_command_line(argc, argv, m_optionsDesc), m_vm);
 	boost::program_options::notify(m_vm);
 
@@ -297,6 +299,10 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::HelpFunc()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallSvc()
 {
+	if(!Initialize())
+	{
+		return 1;
+	}
 	std::string svcName;
 	if(m_vm["name"].empty())
 	{
@@ -409,6 +415,10 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallSvc()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::UninstallSvc()
 {
+	if (!Initialize())
+	{
+		return 1;
+	}
 	static auto svcClearFunc = [](SC_HANDLE handle) {CloseServiceHandle(handle); };
 	ResGuard<SC_HANDLE, decltype(svcClearFunc)> schSCManager(OpenSCManager(
 		nullptr,                 // local computer
@@ -459,6 +469,10 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::UninstallSvc()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvc()
 {
+	if (!Initialize())
+	{
+		return 1;
+	}
 	if(!::SetCurrentDirectoryA(PathHelper::AppDeployPath().c_str()))
 	{
 		LOG4CPLUS_ERROR_FMT(log, "设置当前路径失败，退出执行，错误代码：%d。", GetLastError());
@@ -542,6 +556,10 @@ template<typename T, T *Proc> DWORD WINAPI ApplicationBase<T, Proc>::ServiceCtrl
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 {
+	if (!Initialize())
+	{
+		return 1;
+	}
 	if (!::SetConsoleCtrlHandler(SignalHandler, TRUE))
 	{
 		LOG4CPLUS_ERROR(log, "设置退出处理程序错误，退出执行。");
@@ -559,6 +577,15 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 		Proc->Exit(*m_reporter, log);
 	}
 	return 0;
+}
+
+template<typename T, T *Proc> bool ApplicationBase<T, Proc>::Initialize()
+{
+	std::string path = PathHelper::AppDeployPath();
+	//TODO 自定义路径
+	PathHelper::Combine(&path, "Configuration", "log4cplus.properties", 0);
+	log4cplus::ConfigureAndWatchThread watchThread(path, 6000);
+	return true;
 }
 
 template<typename T, T *Proc> BOOL WINAPI ApplicationBase<T, Proc>::SignalHandler(DWORD dwCtrlType)

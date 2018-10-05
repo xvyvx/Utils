@@ -296,9 +296,9 @@ template<typename T, T *Proc> ApplicationBase<T, Proc>::ApplicationBase() : m_op
 	options("install,i", boost::program_options::value<std::string>(), "install programme as unix daemon(alternative values:systemV,systemd)");
 	options("name,n", boost::program_options::value<std::string>(), "optional,set daemon name when install unix daemon");
 	options("disp-name,d", boost::program_options::value<std::string>(), "optional,set daemon description when install unix daemon");
-	options("start-order", boost::program_options::value<int>(), "optional,set daemon script start order number(systemV only)");
-	options("stop-order", boost::program_options::value<int>(), "optional,set daemon script stop order number(systemV only)");
-	options("svc-depends", boost::program_options::value<std::string>(), "optional,set daemon dependencies when install unix daemon(systemd only)");
+	options("start-order", boost::program_options::value<int>(), "optional,set daemon script start order number(legacy systemV only)");
+	options("stop-order", boost::program_options::value<int>(), "optional,set daemon script stop order number(legacy systemV only)");
+	options("svc-depends", boost::program_options::value<std::string>(), "optional,set daemon dependencies when install unix daemon(non legacy systemV or systemd only)");
 	options("uninstall,u", "uninstall installed unix daemon");
 	options("svc-systemV", "run programme as unix daemon(used by daemon script,don't use directly)");
 	options("svc-systemd", "run programme as unix daemon(used by systemd service manager,don't use directly)");
@@ -381,7 +381,7 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemV()
 	std::string pidFilePath("/var/run/");
 	pidFilePath.append(m_serviceName);
 	pidFilePath.append(".pid");
-	m_pidFile = pidfile_open(pidFilePath.c_str(), 0600, nullptr);
+	m_pidFile = pidfile_open(pidFilePath.c_str(), 0644, nullptr);
 	if (m_pidFile == NULL)
 	{
 		if (errno == EEXIST)
@@ -508,7 +508,7 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 		LOG4CPLUS_ERROR(log, "指定了无效的服务安装方式。");
 		return 1;
 	}
-	int startOrder = 80, stopOrder = 1;
+	int startOrder = 80, stopOrder = 20;
 	std::string depends("");
 	if (installStr == "systemV")
 	{
@@ -521,13 +521,10 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 			stopOrder = m_vm["stop-order"].template as<int>();
 		}
 	}
-	else
+	if (!m_vm["svc-depends"].empty())
 	{
-		if (!m_vm["svc-depends"].empty())
-		{
-			depends.assign(" ");
-			depends.append(m_vm["svc-depends"].template as<std::string>());
-		}
+		depends.assign(" ");
+		depends.append(m_vm["svc-depends"].template as<std::string>());
 	}
 
 	//TODO 自定义路径
@@ -595,13 +592,14 @@ template<typename T,T *Proc> bool ApplicationBase<T,Proc>::Initialize()
 {
 	//TODO 自定义路径
 	std::string path = PathHelper::AppDeployPath();
-	if (chdir(path.c_str()) != 0)
+	PathHelper::Combine(&path, "Configuration", "log4cplus.properties", 0);
+	log4cplus::ConfigureAndWatchThread watchThread(path, 6000);
+
+	if (chdir(PathHelper::AppDeployPath().c_str()) != 0)
 	{
 		LOG4CPLUS_ERROR_FMT(log, "设置当前路径失败，退出执行，错误代码：%d", errno);
 		return false;
 	}
-	PathHelper::Combine(&path, "Configuration", "log4cplus.properties", 0);
-	log4cplus::ConfigureAndWatchThread watchThread(path, 6000);
 
 	struct sigaction act;
 	act.sa_handler = ApplicationBase<T, Proc>::SignalHandler;

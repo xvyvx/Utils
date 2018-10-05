@@ -14,4 +14,15 @@ template class UTILS_DEF_API ObjectPoolBase
 	CircularBufferCacheLoggerName
 >;
 
+template class UTILS_DEF_API ObjectPoolElemDeleter
+<
+	size_t,
+	CircularBuffer,
+	BufferElementTrait<CircularBuffer>,
+	BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>,
+	CircularBufferCacheFactory,
+	BufferCacheBaseClearFunc<CircularBuffer>,
+	CircularBufferCacheLoggerName
+>;
+
 template class UTILS_DEF_API BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>;

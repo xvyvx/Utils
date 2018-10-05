@@ -21,4 +21,15 @@ template class UTILS_DEF_API ObjectPoolBase
 	LinearBufferCacheLoggerName
 >;
 
+template class UTILS_DEF_API ObjectPoolElemDeleter
+<
+	size_t,
+	LinearBuffer,
+	BufferElementTrait<LinearBuffer>,
+	BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, LinearBufferCacheLoggerName>,
+	LinearBufferCacheFactory,
+	BufferCacheBaseClearFunc<LinearBuffer>,
+	LinearBufferCacheLoggerName
+>;
+
 template class UTILS_DEF_API BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, LinearBufferCacheLoggerName>;

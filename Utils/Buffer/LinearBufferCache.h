@@ -28,6 +28,17 @@ extern template class UTILS_DECL_API ObjectPoolBase
 	LinearBufferCacheLoggerName
 >;
 
+extern template class UTILS_DECL_API ObjectPoolElemDeleter
+<
+	size_t,
+	LinearBuffer,
+	BufferElementTrait<LinearBuffer>,
+	BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, LinearBufferCacheLoggerName>,
+	LinearBufferCacheFactory,
+	BufferCacheBaseClearFunc<LinearBuffer>,
+	LinearBufferCacheLoggerName
+>;
+
 extern template class UTILS_DECL_API BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, LinearBufferCacheLoggerName>;
 
 #endif /* LINEARBUFFERCACHE_H */

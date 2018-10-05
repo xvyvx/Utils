@@ -17,7 +17,14 @@ public:
 	{
 		::log4cplus::helpers::SharedObjectPtr<::log4cplus::Appender> append(new log4cplus::ConsoleAppender());
 		append->setName("console");
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored  "-Wdeprecated-declarations"
+#endif
 		std::auto_ptr<::log4cplus::Layout> layout(new ::log4cplus::PatternLayout("%D %c[%t] %-5p %m%n"));
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 		append->setLayout(layout);
 		::log4cplus::Logger logger = ::log4cplus::Logger::getRoot();
 		logger.addAppender(append);

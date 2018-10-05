@@ -9,6 +9,42 @@
 #include "../Concurrent/SpinLock.h"
 
 /**
+* An object pool element deleter.
+*
+* @tparam KeyType Object key type used to indetify same objects.
+* @tparam ElemType  Element type.
+* @tparam ElemTraitType  Element trait type.
+* @tparam SelfType  Derived pool type.
+* @tparam FactoryType  Factory type used to create elements.
+* @tparam ClearFuncType  Function type used to reset object status when returned to pool.
+* @tparam LoggerName  C-style string of logger name.
+* @tparam FindPredType  Function type used to match key when adding object to pool(default is std::equal_to<KeyType>).
+* @tparam GetPredType  Function type used to match key when getting object from pool(default is std::less_equal<KeyType>).
+ */
+template<
+	typename KeyType,
+	typename ElemType,
+	typename ElemTraitType,
+	typename SelfType,
+	typename FactoryType,
+	typename ClearFuncType,
+	const char *LoggerName,
+	typename FindPredType = std::equal_to<KeyType>,
+	typename GetPredType = std::less_equal<KeyType>
+	> class ObjectPoolElemDeleter
+{
+public:
+	/**
+	 * Delete function.
+	 * 
+	 * If the pool is destoried,the obj will be deleted.
+	 *
+	 * @param obj Returned resource object.
+	 */
+	void operator()(ElemType *obj);
+};
+
+/**
 * Object pool Implementation.
 *
 * @tparam KeyType Object key type used to indetify same objects.
@@ -34,11 +70,14 @@ template<
 	> class ObjectPoolBase
 {
 public:
+	friend class ObjectPoolElemDeleter<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType>;
+
+	typedef ObjectPoolElemDeleter<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType> ObjectDeleter;
 
 	/**
 	 * Defines an alias representing the pointer whitch is used by caller.
 	 */
-	typedef std::shared_ptr<ElemType> ptr_t;
+	typedef std::unique_ptr<ElemType, ObjectDeleter> ptr_t;
 
 	ObjectPoolBase(const ObjectPoolBase&) = delete;
 
@@ -103,25 +142,18 @@ protected:
 private:
 	typedef struct
 	{
-		KeyType m_key;
+		KeyType m_key;  /**< Block key */
 
-		size_t m_allocatedCount = 0;
+		size_t m_allocatedCount = 0;	/**< Total number of allocated objects */
 
-		SpinLock<> m_lock;
+		SpinLock<> m_lock;  /**< Thread sync lock */
 
-		std::vector<ElemType*> m_objects;
+		std::vector<ElemType*> m_objects;   /**< Free objects */
 	} ObjectBlocks; /**< Internal object block type */
 
 	std::list<ObjectBlocks> m_blocks;   /**< Internal object blocks */
 
 	static std::shared_ptr<ObjectPoolBase> instance;	/**< Global pool instance */
-
-	/**
-	 * Return the resource object to pool.
-	 *
-	 * @param obj Returned resource object.
-	 */
-	static void ReleaseObject(ElemType *obj);
 
 	static log4cplus::Logger log;   /**< The logger */
 };

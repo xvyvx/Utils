@@ -31,6 +31,17 @@ extern template class UTILS_DECL_API ObjectPoolBase
 	CircularBufferCacheLoggerName
 >;
 
+extern template class UTILS_DECL_API ObjectPoolElemDeleter
+<
+	size_t,
+	CircularBuffer,
+	BufferElementTrait<CircularBuffer>,
+	BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>,
+	CircularBufferCacheFactory,
+	BufferCacheBaseClearFunc<CircularBuffer>,
+	CircularBufferCacheLoggerName
+>;
+
 extern template class UTILS_DECL_API BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>;
 
 #endif /* CIRCULARBUFFERCACHE_H */

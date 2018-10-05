@@ -8,6 +8,9 @@
 #define OBJECT_POOL_BASE_TEMPLATE template<typename KeyType, typename ElemType, typename ElemTraitType, typename SelfType, typename FactoryType, typename ClearFuncType, const char *LoggerName, typename FindPredType, typename GetPredType>
 #define OBJECT_POOL_BASE_FULL_TYPE_NAME ObjectPoolBase<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType>
 
+#define OBJECT_POOL_ELEM_DELETER_TEMPLATE template<typename KeyType, typename ElemType, typename ElemTraitType, typename SelfType, typename FactoryType, typename ClearFuncType, const char *LoggerName, typename FindPredType, typename GetPredType>
+#define OBJECT_POOL_ELEM_DELETER_FULL_TYPE_NAME ObjectPoolElemDeleter<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType>
+
 OBJECT_POOL_BASE_TEMPLATE log4cplus::Logger OBJECT_POOL_BASE_FULL_TYPE_NAME::log = log4cplus::Logger::getInstance(LoggerName);
 
 OBJECT_POOL_BASE_TEMPLATE std::shared_ptr<OBJECT_POOL_BASE_FULL_TYPE_NAME> OBJECT_POOL_BASE_FULL_TYPE_NAME::instance;
@@ -98,22 +101,22 @@ OBJECT_POOL_BASE_TEMPLATE typename OBJECT_POOL_BASE_FULL_TYPE_NAME::ptr_t OBJECT
 		{
 			LOG4CPLUS_DEBUG_FMT(log, "对象池再申请成功，请求Key：%zu，匹配Key：%zu，当前空闲个数：%zu。", static_cast<size_t>(requireKey)
 				, static_cast<size_t>(target->m_key), target->m_objects.size());
-			ptr_t result(target->m_objects.back(), OBJECT_POOL_BASE_FULL_TYPE_NAME::ReleaseObject);
+			ptr_t result(target->m_objects.back(), OBJECT_POOL_BASE_FULL_TYPE_NAME::ObjectDeleter());
 			target->m_objects.pop_back();
 			return result;
 		}
 	}
 	else
 	{
-		ptr_t result(target->m_objects.back(), OBJECT_POOL_BASE_FULL_TYPE_NAME::ReleaseObject);
+		ptr_t result(target->m_objects.back(), OBJECT_POOL_BASE_FULL_TYPE_NAME::ObjectDeleter());
 		target->m_objects.pop_back();
 		return result;
 	}
 }
 
-OBJECT_POOL_BASE_TEMPLATE void OBJECT_POOL_BASE_FULL_TYPE_NAME::ReleaseObject(ElemType *obj)
+OBJECT_POOL_ELEM_DELETER_TEMPLATE void OBJECT_POOL_ELEM_DELETER_FULL_TYPE_NAME::operator()(ElemType *obj)
 {
-	if (!instance)
+	if (!OBJECT_POOL_BASE_FULL_TYPE_NAME::instance)
 	{
 		delete obj;
 	}
@@ -121,12 +124,13 @@ OBJECT_POOL_BASE_TEMPLATE void OBJECT_POOL_BASE_FULL_TYPE_NAME::ReleaseObject(El
 	{
 		ClearFuncType()(obj);
 		FindPredType pred;
-		typename std::list<ObjectBlocks>::iterator target = std::find_if(instance->m_blocks.begin(), instance->m_blocks.end(),
-			[obj, pred](const ObjectBlocks &val)->bool
-			{
-				return pred(ElemTraitType::GetKey(*obj), val.m_key);
-			});
-		assert(target != instance->m_blocks.end());
+		typename std::list<typename OBJECT_POOL_BASE_FULL_TYPE_NAME::ObjectBlocks>::iterator target = std::find_if(OBJECT_POOL_BASE_FULL_TYPE_NAME::instance->m_blocks.begin()
+			, OBJECT_POOL_BASE_FULL_TYPE_NAME::instance->m_blocks.end(),
+			[obj, pred](const typename OBJECT_POOL_BASE_FULL_TYPE_NAME::ObjectBlocks &val)->bool
+		{
+			return pred(ElemTraitType::GetKey(*obj), val.m_key);
+		});
+		assert(target != OBJECT_POOL_BASE_FULL_TYPE_NAME::instance->m_blocks.end());
 		SpinLock<>::ScopeLock lock(target->m_lock);
 		//这里不会失败，因为vector存指针的内存之前在构建池或是临时增加池大小时加上去了，只要不显示调用方法缩小空间，这部分空间就不会还回去（如果没加上去就不会有这个对象指针了）
 		target->m_objects.push_back(obj);

@@ -38,6 +38,8 @@ install:
       wget --no-check-certificate --quiet https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.bz2
       tar xjf ./boost_1_67_0.tar.bz2 && cd ./boost_1_67_0/ && ./bootstrap.sh
       ./bjam stage --toolset=$CC cflags="-fPIC" cxxflags="-std=c++11 -fPIC" linkflags="-fPIC" --with-system --with-thread --with-regex --with-filesystem --with-program_options --with-atomic --with-date_time --with-test --stagedir="./stage" link=static runtime-link=shared threading=multi --layout=versioned variant=$(tr 'A-Z' 'a-z'<<<"$CONFIG")
+      cd ./stage/lib && for file in `ls`;do mv $file `echo $file|sed 's/-x32//g'`;done;
+      cd $THIRD_DIR
       wget --no-check-certificate --quiet https://github.com/log4cplus/log4cplus/archive/REL_1_2_0.zip
       unzip -q REL_1_2_0.zip
       cd log4cplus-REL_1_2_0 && mkdir build && cd build

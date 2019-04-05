@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <dlfcn.h>
+#include <boost/format.hpp>
 
 SystemdProgressReporter::SystemdProgressReporter() :m_libHandle(NULL), m_sd_notify(NULL), m_status(Status_StartPending)
 {
@@ -47,17 +48,27 @@ SystemdProgressReporter& SystemdProgressReporter::operator=(SystemdProgressRepor
 
 void SystemdProgressReporter::IncProgress(int step, int waitHint)
 {
+#if defined(linux) || defined(__linux)
+	std::string msg = (boost::format("EXTEND_TIMEOUT_USEC=%d") % (waitHint * 1000)).str();
+	m_sd_notify(0, msg.c_str());
+#endif
 }
 
 void SystemdProgressReporter::ReportNewStatus(Status newStatus, int waitHint, us32 exitCode)
 {
-	if(newStatus == Status_Running)
+	if (newStatus == Status_StartPending)
+	{
+		std::string msg = (boost::format("EXTEND_TIMEOUT_USEC=%d") % (waitHint * 1000)).str();
+		m_sd_notify(0, msg.c_str());
+	}
+	else if(newStatus == Status_Running)
 	{
 		m_sd_notify(0, "READY=1");
 	}
 	else if(newStatus == Status_StopPending)
 	{
-		m_sd_notify(0, "STOPPING=1");
+		std::string msg = (boost::format("STOPPING=1\nEXTEND_TIMEOUT_USEC=%d") % (waitHint * 1000)).str();
+		m_sd_notify(0, msg.c_str());
 	}
 	m_status = newStatus;
 }

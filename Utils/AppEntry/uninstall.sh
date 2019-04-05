@@ -11,6 +11,6 @@ if [ "$serviceType" = "systemV" ]; then
 else
     systemctl stop $name.service
     systemctl disable $name.service || exit 1
-    rm -f /etc/systemd/system/$name.service || exit 2
+    rm -f /etc/systemd/user/$name.service || exit 2
 fi
 exit 0

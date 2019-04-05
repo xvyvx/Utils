@@ -55,7 +55,7 @@ public:
 	 * Increment current status progress.
 	 *
 	 * @param step Amount to increment by.
-	 * @param waitHint System service manager wait times after this call.
+	 * @param waitHint System service manager wait times after this call(in milliseconds).
 	 */
 	virtual void IncProgress(int step, int waitHint) = 0;
 
@@ -63,7 +63,7 @@ public:
 	 * Reports a new service running status.
 	 *
 	 * @param newStatus The new status.
-	 * @param waitHint System service manager wait times after this call.
+	 * @param waitHint System service manager wait times after this call(in milliseconds).
 	 * @param exitCode  (Optional) The exit code if status is Status_Stoped.
 	 */
 	virtual void ReportNewStatus(Status newStatus, int waitHint, us32 exitCode = 0) = 0;

@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <bsd/libutil.h>
 #include <memory>
 #include <iostream>
@@ -14,6 +15,7 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/thread.hpp>
 #include "../Concurrent/WaitEvent.h"
 #include "IProgressReporter.h"
 #include "SystemdProgressReporter.h"
@@ -25,7 +27,8 @@
  *
  * @tparam T Application specific type.
  * 	T must implete following function:
- * @code
+ * @code {.cpp}
+ * 	void InitParameterDescriptions(boost::program_options::options_description_easy_init &desc);
  * 	bool Startup(IProgressReporter&, const boost::program_options::variables_map&, log4cplus::Logger&)
  * 	bool Exit(IProgressReporter&, log4cplus::Logger&);
  * @endcode
@@ -40,6 +43,15 @@ public:
 	typedef ApplicationBase<T, Proc> SelfType;
 
 	static constexpr size_t MaxServiceNameLength = 31;  /**< The maximum service name length */
+
+	/**
+	 * Begin application exit process.
+	 *
+	 * Only begin a exit request,do not block to wait exit
+	 *
+	 * @returns 0-request successful,otherwise failed.
+	 */
+	static us32 ExitApplication();
 
 	/**
 	 * Gets the global instance.
@@ -105,6 +117,29 @@ private:
 		DaemonType_None, /**< Running application is not installed a daemon. */
 		DaemonType_SystemV, /**< Running application is installed as a systemV daemon. */
 		DaemonType_Systemd /**< Running application is installed as a systemd daemon. */
+	};
+
+	/**
+	 * Values that represent SysV daemon Initialize results
+	 */
+	enum SysVDaemonIniResult
+	{
+		SysVDaemonIniResult_DaemonIniSuccessful = 0,	/**<Constant representing the SysV daemon initialize successful */
+		SysVDaemonIniResult_FirstChildSuccessful,   /**< Constant representing the first child initialize successful option */
+		SysVDaemonIniResult_Successful, /**< Constant representing the parent process receive child successful notify */
+		SysVDaemonIniResult_AlreadyExec,	/**< Constant representing the daemon process already execute */
+		SysVDaemonIniResult_OpenPIDFileFailed,  /**< Constant representing the parent process open PID file failed */
+		SysVDaemonIniResult_OpenIPCFailed,  /**< Constant representing open ipc failed */
+		SysVDaemonIniResult_FirstForkFailed,	/**< Constant representing first fork call failed */
+		SysVDaemonIniResult_ParentReadPipeFailed,   /**< Constant representing the parent process read pipe failed */
+		SysVDaemonIniResult_SetsidFailed,   /**< Constant representing setsid call failed */
+		SysVDaemonIniResult_SecondForkFailed,   /**< Constant representing second fork call failed */
+		SysVDaemonIniResult_DaemonOpenNullFileFailed,   /**< Constant representing the daemon process open null file descriptor failed */
+		OpenNullFileFailed_DaemonRedirectFailed,	/**< Constant representing the daemon process redirect stdin,stdout,stderr failed */
+		SysVDaemonIniResult_DaemonInitFailed,   /**< Constant representing the daemon process initialize failed */
+		SysVDaemonIniResult_DaemonCreateSyncEvtFailed,  /**< Constant representing the daemon process create synchronise event failed */
+		SysVDaemonIniResult_DaemonWritePIDFileFailed,   /**< Constant representing the daemon process write PID file failed */
+		SysVDaemonIniResult_DaemonStartupFailed /**< Constant representing the daemon process call startup failed */
 	};
 
 	/**
@@ -186,9 +221,32 @@ private:
 	/**
 	 * Initializes execution environment.
 	 *
-	 * @return True if it succeeds, false if it fails.
+	 * @return Non nullptr if it succeeds, nullptr if it fails.
 	 */
-	bool Initialize();
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> Initialize();
+
+	/**
+	 * Initializes the daemon install type and name.
+	 */
+	void InitializeDaemonName();
+
+	/**
+	 * SysV daemon initialize.
+	 *
+	 * @param [out] writePipe The pipe file descriptor used to send notify message to parent process.
+	 *
+	 * @returns Pipe file descriptor.
+	 */
+	int SysVDaemonInitialize(int* writePipe);
+
+	/**
+	 * SysV daemon child process initialize.
+	 *
+	 * @param writePipe The pipe file descriptor used to send notify message to parent process.
+	 *
+	 * @returns Pipe file descriptor.
+	 */
+	int SysVDaemonChildInitialize(int writePipe);
 
 	/**
 	 * Signal handler entry.
@@ -196,6 +254,14 @@ private:
 	 * @param sigNum The signal number.
 	 */
 	static void SignalHandler(int sigNum);
+
+	/**
+	 * Writes a notify message to pipe.
+	 *
+	 * @param pipe The pipe file descriptor used to send notify message to parent process.
+	 * @param msg  The notify message.
+	 */
+	static void WriteNotifyPipeMsg(int pipe, us8 msg);
 
 	/**
 	 * Writes daemon install information file.
@@ -234,6 +300,13 @@ private:
 	 * @return True if it succeeds, false if it fails.
 	 */
 	static bool RemoveFile(const std::string &path);
+
+	/**
+	 * Delay execute when running as daemon(unit:seconds).
+	 *
+	 * @param reporter progress report obj.
+	 */
+	static void DelayExec(IProgressReporter *reporter);
 
 	/**
 	 * A parameter entry.
@@ -295,13 +368,16 @@ template<typename T, T *Proc> ApplicationBase<T, Proc>::ApplicationBase() : m_op
 	options("help,h", "produce help message");
 	options("install,i", boost::program_options::value<std::string>(), "install programme as unix daemon(alternative values:systemV,systemd)");
 	options("name,n", boost::program_options::value<std::string>(), "optional,set daemon name when install unix daemon");
-	options("disp-name,d", boost::program_options::value<std::string>(), "optional,set daemon description when install unix daemon");
+	options("svc-desc", boost::program_options::value<std::string>(), "optional,set service description when install unix daemon");
 	options("start-order", boost::program_options::value<int>(), "optional,set daemon script start order number(legacy systemV only)");
 	options("stop-order", boost::program_options::value<int>(), "optional,set daemon script stop order number(legacy systemV only)");
-	options("svc-depends", boost::program_options::value<std::string>(), "optional,set daemon dependencies when install unix daemon(non legacy systemV or systemd only)");
+	options("svc-depends", boost::program_options::value< std::vector<std::string> >(), "optional,set daemon dependencies when install unix daemon(non legacy systemV or systemd only)");
+	options("exec-delay", boost::program_options::value<unsigned int>(), "optional,set daemon execute delay time when startup(in seconds).");
 	options("uninstall,u", "uninstall installed unix daemon");
 	options("svc-systemV", "run programme as unix daemon(used by daemon script,don't use directly)");
 	options("svc-systemd", "run programme as unix daemon(used by systemd service manager,don't use directly)");
+	options("svc-exec-delay", boost::program_options::value<unsigned int>(), "Unix daemon execute delay time(in seconds,used by daemon script or systemd service manager,don't use directly)");
+	Proc->InitParameterDescriptions(options);
 }
 
 template<typename T, T *Proc> ApplicationBase<T, Proc>::~ApplicationBase()
@@ -335,9 +411,16 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::Run(int argc, char *
 	return ret;
 }
 
+template<typename T, T *Proc> us32 ApplicationBase<T, Proc>::ExitApplication()
+{
+	SignalHandler(SIGTERM);
+	return 0;
+}
+
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 {
-	if (!Initialize())
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	if (!logWatchThread)
 	{
 		return 1;
 	}
@@ -363,58 +446,61 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemV()
 {
-	if (daemon(1, 0) != 0)
-	{
-		return 1;
-	}
-	if (!Initialize())
-	{
-		return 2;
-	}
-	if (!m_evt)
-	{
-		LOG4CPLUS_ERROR(log, "创建控制事件失败。");
-		return 2;
-	}
-
-	int ret = 0;
+	InitializeDaemonName();
 	std::string pidFilePath("/var/run/");
 	pidFilePath.append(m_serviceName);
 	pidFilePath.append(".pid");
 	m_pidFile = pidfile_open(pidFilePath.c_str(), 0644, nullptr);
 	if (m_pidFile == NULL)
 	{
-		if (errno == EEXIST)
-		{
-			LOG4CPLUS_ERROR_FMT(log, "指定的Daemon已经运行，退出执行，Daemon名称：%s。", m_serviceName.c_str());
-		}
-		else
-		{
-			LOG4CPLUS_ERROR_FMT(log, "创建Pid文件失败，退出执行，Daemon名称：%s，错误代码：%d", m_serviceName.c_str(), errno);
-		}
-		ret = 1;
+		return errno == EEXIST ? SysVDaemonIniResult_AlreadyExec : SysVDaemonIniResult_OpenPIDFileFailed;
 	}
-	if(ret==0)
+
+	int notifyPipe;
+	int result = SysVDaemonInitialize(&notifyPipe);
+	if (result != SysVDaemonIniResult_DaemonIniSuccessful)
 	{
-		ret = pidfile_write(m_pidFile);
-		if (ret == -1)
-		{
-			LOG4CPLUS_ERROR_FMT(log, "写入Pid文件失败，退出执行，Daemon名称：%s，错误代码：%d", m_serviceName.c_str(), errno);
-		}
+		return result;
+	}
+	auto pipeDeleter = [](int* pipeDesc) {close(*pipeDesc); };
+	std::unique_ptr<int, decltype((pipeDeleter))> pipeGuard(&notifyPipe, pipeDeleter);
+
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	if (!logWatchThread)
+	{
+		WriteNotifyPipeMsg(notifyPipe, SysVDaemonIniResult_DaemonInitFailed);
+		return SysVDaemonIniResult_DaemonInitFailed;
+	}
+	if (!m_evt)
+	{
+		WriteNotifyPipeMsg(notifyPipe, SysVDaemonIniResult_DaemonCreateSyncEvtFailed);
+		LOG4CPLUS_ERROR(log, "创建控制事件失败。");
+		return SysVDaemonIniResult_DaemonCreateSyncEvtFailed;
+	}
+	int ret = pidfile_write(m_pidFile);
+	if (ret == -1)
+	{
+		WriteNotifyPipeMsg(notifyPipe, SysVDaemonIniResult_DaemonWritePIDFileFailed);
+		LOG4CPLUS_ERROR_FMT(log, "写入Pid文件失败，退出执行，Daemon名称：%s，错误代码：%d", m_serviceName.c_str(), errno);
+		ret = SysVDaemonIniResult_DaemonWritePIDFileFailed;
 	}
 
 	if (ret == 0)
 	{
 		m_reporter.reset(new NullReport());
+		DelayExec(m_reporter.get());
 		if (Proc->Startup(*m_reporter, m_vm, log))
 		{
+			WriteNotifyPipeMsg(notifyPipe, SysVDaemonIniResult_Successful);
+			pipeGuard.reset();
 			m_evt->Wait();
 			Proc->Exit(*m_reporter, log);
 			AppInstance->m_reporter->ReportNewStatus(Status_Stoped, 0);
 		}
 		else
 		{
-			ret = 1;
+			WriteNotifyPipeMsg(notifyPipe, SysVDaemonIniResult_DaemonStartupFailed);
+			ret = SysVDaemonIniResult_DaemonStartupFailed;
 			Proc->Exit(*m_reporter, log);
 		}
 	}
@@ -423,6 +509,7 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemV()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemd()
 {
+	InitializeDaemonName();
 	SystemdProgressReporter *report = new SystemdProgressReporter();
 	m_reporter.reset(report);
 	if (!*report)
@@ -430,17 +517,19 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemd()
 		return 1;
 	}
 	m_reporter->ReportNewStatus(Status_StartPending, 30000);
-	if (!Initialize())
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	if (!logWatchThread)
 	{
-		m_reporter->ReportNewStatus(Status_StopPending, 0, 1);
+		m_reporter->ReportNewStatus(Status_StopPending, 30000, 1);
 		return 1;
 	}
 	if (!m_evt)
 	{
-		m_reporter->ReportNewStatus(Status_StopPending, 0, 1);
+		m_reporter->ReportNewStatus(Status_StopPending, 30000, 1);
 		LOG4CPLUS_ERROR(log, "创建控制事件失败。");
 		return 1;
 	}
+	DelayExec(report);
 	int ret = 0;
 	if (Proc->Startup(*m_reporter, m_vm, log))
 	{
@@ -450,7 +539,7 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemd()
 	}
 	else
 	{
-		m_reporter->ReportNewStatus(Status_StopPending, 0, 1);
+		m_reporter->ReportNewStatus(Status_StopPending, 30000, 1);
 		ret = 1;
 		Proc->Exit(*m_reporter, log);
 	}
@@ -465,7 +554,9 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::HelpFunc()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 {
-	if (!Initialize())
+	InitializeDaemonName();
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	if (!logWatchThread)
 	{
 		return 1;
 	}
@@ -492,14 +583,14 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 		LOG4CPLUS_ERROR(log, "指定的服务名含有非法字符或长度过长。");
 		return 1;
 	}
-	std::string svcDisplayName;
-	if (m_vm["disp-name"].empty())
+	std::string svcDesc;
+	if (m_vm["svc-desc"].empty())
 	{
-		svcDisplayName = T::SvcDisplayName();
+		svcDesc = T::SvcDescription();
 	}
 	else
 	{
-		svcDisplayName = m_vm["disp-name"].template as<std::string>();
+		svcDesc = m_vm["svc-desc"].template as<std::string>();
 	}
 
 	std::string installStr = m_vm["install"].template as<std::string>();
@@ -523,16 +614,34 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 	}
 	if (!m_vm["svc-depends"].empty())
 	{
-		depends.assign(" ");
-		depends.append(m_vm["svc-depends"].template as<std::string>());
+		std::vector<std::string> temp = m_vm["svc-depends"].as< std::vector<std::string> >();
+		for (const auto &str : temp)
+		{
+			depends.push_back(' ');
+			depends.insert(depends.end(), str.c_str(), str.c_str() + str.size());
+		}
+	}
+
+	char delayTimeStr[48] = { 0 };
+	if (!m_vm["exec-delay"].empty())
+	{
+		unsigned int delayTime = m_vm["exec-delay"].as<unsigned int>();
+		if (delayTime > 0 && delayTime < 9999)
+		{
+			RunTimeLibraryHelper::SPrintF(delayTimeStr, sizeof(delayTimeStr) / sizeof(char), " --svc-exec-delay=%u", delayTime);
+		}
+		else if (delayTime != 0)
+		{
+			LOG4CPLUS_ERROR_FMT(log, "延迟执行时间范围错误，丢弃改参数，参数值：%u。", delayTime);
+		}
 	}
 
 	//TODO 自定义路径
 	std::string path = PathHelper::AppDeployPath();
 	std::string daemonPath = PathHelper::AppExecutablePath();
 	std::string installScriptPath = path;
-	PathHelper::Combine(&installScriptPath, "Configuration", (boost::format("install.sh %s \"%s\" \"%s\" \"%s\" \"%s\" %02d %02d \"%s\"") % installStr % svcName % svcDisplayName
-		% daemonPath % path % startOrder % stopOrder % depends).str().c_str(), nullptr);
+	PathHelper::Combine(&installScriptPath, "Configuration", (boost::format("install.sh %s \"%s\" \"%s\" \"%s\" \"%s\" %02d %02d \"%s\" \"%s\"") % installStr % svcName % svcDesc
+		% daemonPath % path % startOrder % stopOrder % depends % delayTimeStr).str().c_str(), nullptr);
 	int exitCode = system(installScriptPath.c_str());
 	if (!GetChildExecResult(exitCode, "执行安装脚本"))
 	{
@@ -555,7 +664,9 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallDaemon()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::UninstallDaemon()
 {
-	if (!Initialize())
+	InitializeDaemonName();
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	if (!logWatchThread)
 	{
 		return 1;
 	}
@@ -588,17 +699,17 @@ template<typename T,T *Proc> int ApplicationBase<T,Proc>::UninstallDaemonImpl(co
 	return 0;
 }
 
-template<typename T,T *Proc> bool ApplicationBase<T,Proc>::Initialize()
+template<typename T,T *Proc> std::unique_ptr<log4cplus::ConfigureAndWatchThread> ApplicationBase<T,Proc>::Initialize()
 {
 	//TODO 自定义路径
 	std::string path = PathHelper::AppDeployPath();
 	PathHelper::Combine(&path, "Configuration", "log4cplus.properties", 0);
-	log4cplus::ConfigureAndWatchThread watchThread(path, 6000);
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> watchThread(new log4cplus::ConfigureAndWatchThread(path, 6000));
 
 	if (chdir(PathHelper::AppDeployPath().c_str()) != 0)
 	{
 		LOG4CPLUS_ERROR_FMT(log, "设置当前路径失败，退出执行，错误代码：%d", errno);
-		return false;
+		return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
 	}
 
 	struct sigaction act;
@@ -606,7 +717,7 @@ template<typename T,T *Proc> bool ApplicationBase<T,Proc>::Initialize()
 	if (sigemptyset(&act.sa_mask) == -1)
 	{
 		LOG4CPLUS_ERROR_FMT(log, "初始化信号掩码失败，退出执行，错误代码：%d", errno);
-		return false;
+		return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
 	}
 	act.sa_flags = 0;
 	act.sa_restorer = 0;
@@ -614,9 +725,15 @@ template<typename T,T *Proc> bool ApplicationBase<T,Proc>::Initialize()
 		|| sigaction(SIGTTIN, &act, nullptr) == -1|| sigaction(SIGTTOU, &act, nullptr) == -1)
 	{
 		LOG4CPLUS_ERROR_FMT(log, "注册信号处理程序失败，退出执行，错误代码：%d", errno);
-		return false;
+		return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
 	}
 
+	m_evt.reset(new WaitEvent());
+	return watchThread;
+}
+
+template<typename T, T* Proc> void ApplicationBase<T, Proc>::InitializeDaemonName()
+{
 	//TODO 自定义路径
 	std::string nameFilePath = PathHelper::AppDeployPath();
 	PathHelper::Combine(&nameFilePath, "Configuration", "svcname.txt", nullptr);
@@ -635,8 +752,6 @@ template<typename T,T *Proc> bool ApplicationBase<T,Proc>::Initialize()
 	{
 		m_svcType = DaemonType_Systemd;
 	}
-	m_evt.reset(new WaitEvent());
-	return true;
 }
 
 template<typename T,T *Proc> void ApplicationBase<T,Proc>::SignalHandler(int sigNum)
@@ -653,6 +768,88 @@ template<typename T,T *Proc> void ApplicationBase<T,Proc>::SignalHandler(int sig
 		//SIGTTIN,SIGTTOU
 		break;
 	}
+}
+
+template<typename T, T* Proc> int ApplicationBase<T, Proc>::SysVDaemonInitialize(int* writePipe)
+{
+	int pipeDesc[2];
+	if (pipe(pipeDesc) != 0)
+	{
+		return SysVDaemonIniResult_OpenIPCFailed;
+	}
+	pid_t result = fork();
+	if (result == -1)
+	{
+		close(pipeDesc[0]);
+		close(pipeDesc[1]);
+		return SysVDaemonIniResult_FirstForkFailed;
+	}
+	if (result != 0)
+	{
+		close(pipeDesc[1]);
+		pidfile_close(m_pidFile);
+		m_pidFile = nullptr;
+		us8 childResult = 0;
+		ssize_t readBytes = read(pipeDesc[0], &childResult, 1);
+		close(pipeDesc[0]);
+		return readBytes == -1 || readBytes == 0 ? SysVDaemonIniResult_ParentReadPipeFailed : childResult;
+	}
+	else
+	{
+		close(pipeDesc[0]);
+		*writePipe = pipeDesc[1];
+		return SysVDaemonChildInitialize(pipeDesc[1]);
+	}
+}
+
+template<typename T, T* Proc> int ApplicationBase<T, Proc>::SysVDaemonChildInitialize(int writePipe)
+{
+	pid_t result = setsid();
+	if (result == -1)
+	{
+		WriteNotifyPipeMsg(writePipe, SysVDaemonIniResult_SetsidFailed);
+		close(writePipe);
+		return SysVDaemonIniResult_SetsidFailed;
+	}
+	result = fork();
+	if (result == -1)
+	{
+		WriteNotifyPipeMsg(writePipe, SysVDaemonIniResult_SecondForkFailed);
+		close(writePipe);
+		return SysVDaemonIniResult_SecondForkFailed;
+	}
+	if (result != 0)
+	{
+		close(writePipe);
+		pidfile_close(m_pidFile);
+		m_pidFile = nullptr;
+		return SysVDaemonIniResult_FirstChildSuccessful;
+	}
+	else
+	{
+		int nullDesc = open("/dev/null", O_RDWR);
+		if (nullDesc == -1)
+		{
+			WriteNotifyPipeMsg(writePipe, SysVDaemonIniResult_DaemonOpenNullFileFailed);
+			close(writePipe);
+			return SysVDaemonIniResult_DaemonOpenNullFileFailed;
+		}
+		if (dup2(nullDesc, STDIN_FILENO) == -1 || dup2(nullDesc, STDOUT_FILENO) == -1 || dup2(nullDesc, STDERR_FILENO) == -1)
+		{
+			WriteNotifyPipeMsg(writePipe, OpenNullFileFailed_DaemonRedirectFailed);
+			close(writePipe);
+			close(nullDesc);
+			return OpenNullFileFailed_DaemonRedirectFailed;
+		}
+		close(nullDesc);
+		umask(0);
+	}
+	return SysVDaemonIniResult_DaemonIniSuccessful;
+}
+
+template<typename T, T* Proc> void ApplicationBase<T, Proc>::WriteNotifyPipeMsg(int pipe, us8 msg)
+{
+	write(pipe, &msg, 1);
 }
 
 template<typename T, T *Proc> bool ApplicationBase<T, Proc>::WriteFile(const std::string &content,const std::string &path)
@@ -719,6 +916,20 @@ template<typename T, T *Proc> bool ApplicationBase<T, Proc>::RemoveFile(const st
 	else
 	{
 		return true;
+	}
+}
+
+template<typename T, T *Proc> void ApplicationBase<T, Proc>::DelayExec(IProgressReporter *reporter)
+{
+	unsigned int delayTime = 0;
+	if (!AppInstance->m_vm["svc-exec-delay"].empty())
+	{
+		delayTime = AppInstance->m_vm["svc-exec-delay"].as<unsigned int>();
+	}
+	if (delayTime)
+	{
+		reporter->IncProgress(0, static_cast<int>(delayTime) * 1000);
+		boost::this_thread::sleep_for(boost::chrono::seconds(delayTime));
 	}
 }
 

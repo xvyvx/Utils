@@ -1,11 +1,13 @@
 [Unit]
 Description=@svcDisplayName
-After=network.target@svcDepends
+After=network-online.target@svcDepends
+Requires=network-online.target@svcDepends
 
 [Service]
 Type=notify
+NotifyAccess=main
 WorkingDirectory=@daemonExecutePath
-ExecStart=@daemonPath --svc-systemd
+ExecStart=@daemonPath --svc-systemd@delayTimeArg
 
 [Install]
 WantedBy=multi-user.target

@@ -12,6 +12,7 @@
 #include "../Common/PathHelper.h"
 #include "../Common/ResGuard.h"
 #include "../Common/RunTimeLibraryHelper.h"
+#include "../Common/WinSrvHelper.h"
 #include "../Concurrent/WaitEvent.h"
 #include "../Log/Log4cplusCustomInc.h"
 #include <boost/algorithm/string/classification.hpp>
@@ -21,7 +22,8 @@
  *
  * @tparam T Application specific type.
  * 	T must implete following function:
- * @code
+ * @code {.cpp}
+ * 	void InitParameterDescriptions(boost::program_options::options_description_easy_init &desc)
  * 	bool Startup(IProgressReporter&, const boost::program_options::variables_map&, log4cplus::Logger&)
  * 	bool Exit(IProgressReporter&, log4cplus::Logger&);
  * @endcode
@@ -36,6 +38,15 @@ public:
 	typedef ApplicationBase<T, Proc> SelfType;
 
 	static constexpr size_t MaxServiceNameLength = 31; /**< The maximum service name length */
+
+	/**
+	 * Begin application exit process.
+	 * 
+	 * Only begin a exit request,do not block to wait exit 
+	 *
+	 * @returns 0-request successful,otherwise failed.
+	 */
+	static us32 ExitApplication();
 
 	/**
 	* Gets the global instance.
@@ -151,11 +162,11 @@ private:
 	int RunNormal();
 
 	/**
-	* Initializes execution environment.
-	*
-	* @return True if it succeeds, false if it fails.
-	*/
-	bool Initialize();
+	 * Initializes execution environment.
+	 *
+	 * @return Non nullptr if it succeeds, nullptr if it fails.
+	 */
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> Initialize();
 
 	/**
 	 * Writes service install information file.
@@ -260,8 +271,11 @@ template<typename T, T *Proc> ApplicationBase<T, Proc>::ApplicationBase() : m_st
 	options("disp-name,d", boost::program_options::value<std::string>(), "optional,set service display name when install windows service");
 	options("svc-desc", boost::program_options::value<std::string>(), "optional,set service description when install windows service");
 	options("svc-depends", boost::program_options::value< std::vector<std::string> >(), "optional,set service dependencies when install windows service");
+	options("exec-delay", boost::program_options::value<unsigned int>(), "optional,set service execute delay time when startup(in seconds).");
 	options("uninstall,u", "uninstall installed windows service");
 	options("svc", "run programme as windows service(used by SCManager,don't use directly)");
+	options("svc-exec-delay", boost::program_options::value<unsigned int>(), "service execute delay time(in seconds,used by SCManager,don't use directly)");
+	Proc->InitParameterDescriptions(options);
 }
 
 template<typename T, T *Proc> ApplicationBase<T,Proc>::~ApplicationBase()
@@ -291,6 +305,19 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::Run(int argc, char *
 	return ret;
 }
 
+template<typename T, T *Proc> us32 ApplicationBase<T, Proc>::ExitApplication()
+{
+	if (AppInstance->m_serviceName.empty())
+	{
+		SignalHandler(CTRL_CLOSE_EVENT);
+		return 0;
+	}
+	else
+	{
+		return WinSrvHelper::StopService(AppInstance->m_serviceName.c_str(), false);
+	}
+}
+
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::HelpFunc()
 {
 	std::cout << m_optionsDesc << std::endl;
@@ -299,7 +326,8 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::HelpFunc()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallSvc()
 {
-	if(!Initialize())
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	if(!logWatchThread)
 	{
 		return 1;
 	}
@@ -353,6 +381,20 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallSvc()
 			}
 		}
 
+		char delayTimeStr[48] = { 0 };
+		if (!m_vm["exec-delay"].empty())
+		{
+			unsigned int delayTime = m_vm["exec-delay"].as<unsigned int>();
+			if (delayTime > 0 && delayTime < 9999)
+			{
+				RunTimeLibraryHelper::SPrintF(delayTimeStr, sizeof(delayTimeStr) / sizeof(char), " \"--svc-exec-delay=%u\"", delayTime);
+			}
+			else if (delayTime != 0)
+			{
+				LOG4CPLUS_ERROR_FMT(log, "延迟执行时间范围错误，丢弃改参数，参数值：%u。", delayTime);
+			}
+		}
+
 		if(!WriteSvcNameFile(svcName))
 		{
 			LOG4CPLUS_ERROR(log, "保存服务名失败。");
@@ -360,7 +402,8 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallSvc()
 		}
 
 		std::string appPath = PathHelper::AppExecutablePath();
-		appPath.append(" --svc");
+		appPath.insert(appPath.begin(), '\"');
+		appPath.append("\"").append(" \"--svc\"").append(delayTimeStr);
 		ResGuard<SC_HANDLE, decltype(svcClearFunc)> schService(CreateServiceA(
 			schSCManager.get(),        // SCM database 
 			svcName.c_str(),           // name of service 
@@ -415,7 +458,8 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::InstallSvc()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::UninstallSvc()
 {
-	if (!Initialize())
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	if (!logWatchThread)
 	{
 		return 1;
 	}
@@ -469,7 +513,8 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::UninstallSvc()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvc()
 {
-	if (!Initialize())
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	if (!logWatchThread)
 	{
 		return 1;
 	}
@@ -510,7 +555,16 @@ template<typename T, T *Proc> void WINAPI ApplicationBase<T, Proc>::ServiceMain(
 		abort();
 	}
 
-	report->ReportNewStatus(Status_StartPending, 30000);
+	unsigned int delayTime = 0;
+	if (!AppInstance->m_vm["svc-exec-delay"].empty())
+	{
+		delayTime = AppInstance->m_vm["svc-exec-delay"].as<unsigned int>();
+	}
+	report->ReportNewStatus(Status_StartPending, 30000 + delayTime * 1000);
+	if (delayTime)
+	{
+		::Sleep(delayTime * 1000);
+	}
 	AppInstance->m_stopEvt = ::CreateEvent(nullptr, false, false, nullptr);
 	if (!AppInstance->m_stopEvt)
 	{
@@ -556,7 +610,8 @@ template<typename T, T *Proc> DWORD WINAPI ApplicationBase<T, Proc>::ServiceCtrl
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 {
-	if (!Initialize())
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	if (!logWatchThread)
 	{
 		return 1;
 	}
@@ -579,13 +634,13 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 	return 0;
 }
 
-template<typename T, T *Proc> bool ApplicationBase<T, Proc>::Initialize()
+template<typename T, T *Proc> std::unique_ptr<log4cplus::ConfigureAndWatchThread> ApplicationBase<T, Proc>::Initialize()
 {
 	std::string path = PathHelper::AppDeployPath();
 	//TODO 自定义路径
 	PathHelper::Combine(&path, "Configuration", "log4cplus.properties", 0);
-	log4cplus::ConfigureAndWatchThread watchThread(path, 6000);
-	return true;
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> watchThread(new log4cplus::ConfigureAndWatchThread(path, 6000));
+	return watchThread;
 }
 
 template<typename T, T *Proc> BOOL WINAPI ApplicationBase<T, Proc>::SignalHandler(DWORD dwCtrlType)

@@ -2,7 +2,7 @@ SET(UtilSources AppEntry/IProgressReporter.cpp AppEntry/WinSvcProgressReporter.c
 	Buffer/BinaryHelper.cpp Buffer/CircularBuffer.cpp Buffer/CircularBufferCache.cpp Buffer/LinearBuffer.cpp Buffer/LinearBufferCache.cpp
 	Channel/Common/IAsyncChannel.cpp Channel/Common/IAsyncChannelHandler.cpp Channel/SerialPort/SerialPortChannel.cpp
 	Channel/Tcp/TcpV4Channel.cpp Channel/Tcp/TcpV4Listener.cpp Channel/Tcp/TcpV4PassiveChannel.cpp
-	Common/PathHelper.cpp
+	Common/PathHelper.cpp Common/WinSrvHelper.cpp
 	Concurrent/BlackMagics.cpp Concurrent/ThreadPool.cpp Concurrent/WaitEvent.cpp
 	Database/SQL/Common/ISqlDatabase.cpp Database/SQL/Common/SqlDatabasePool.cpp Database/SQL/ODBC/ODBCSqlDatabase.cpp
 	Database/SQL/OCI/OCISqlDatabase.cpp

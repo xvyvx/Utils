@@ -14,7 +14,7 @@ set - e
 DESC="@svcDisplayName"
 NAME=@svcName
 DAEMON=@daemonPath
-DAEMON_ARGS="--svc-systemV"
+DAEMON_ARGS="--svc-systemV@delayTimeArg"
 DAEMON_DIRECTORY=@daemonExecutePath
 WAIT_STOP_TIMEOUT=300
 PATH=$PATH:/sbin:/usr/sbin:/bin:/usr/bin

@@ -51,15 +51,13 @@ public:
 
 	/**
 	 * {@inheritDoc}
-	 * 
-	 * @note This is empty implementation(has no effect after calls).
 	 */
 	virtual void IncProgress(int step, int waitHint);
 
 	/**
 	* {@inheritDoc}
 	*
-	* @note Only newStatus is Status_Running/Status_StopPending has effect,other status and arguments is skipped.
+	* @note Only newStatus is Status_StartPending/Status_Running/Status_StopPending has effect,other status and arguments is skipped.
 	*/
 	virtual void ReportNewStatus(Status newStatus, int waitHint, us32 exitCode = 0);
 

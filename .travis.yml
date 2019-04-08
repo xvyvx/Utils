@@ -62,7 +62,7 @@ before_script:
   - cd $TRAVIS_BUILD_DIR
   - mkdir build && cd ./build
   - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then export COVERAGE_FLAGS="--coverage"; fi
-  - if [[ "$CXX" = "clang" ]]; then export BOOST_COMPILER_FLAG="-DBoost_COMPILER=-clang70"; fi
+  - if [[ "$CC" = "clang" ]]; then export BOOST_COMPILER_FLAG="-DBoost_COMPILER=-clang70"; fi
   - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="$COVERAGE_FLAGS" -DBOOST_INCLUDEDIR="$THIRD_DIR/boost_1_67_0" -DBOOST_LIBRARYDIR="$THIRD_DIR/boost_1_67_0/stage/lib" $BOOST_COMPILER_FLAG -DCMAKE_BUILD_TYPE=$CONFIG ..
 
 script:

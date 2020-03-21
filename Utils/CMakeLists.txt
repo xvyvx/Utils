@@ -31,6 +31,13 @@ IF(UNIX)
 		TARGET_COMPILE_DEFINITIONS(Utils PUBLIC -DUSE_OCI_DATABASE_UTILS)
 		TARGET_LINK_LIBRARIES(Utils PUBLIC "oci")
 	ENDIF()
+	IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		SET(TargetOutputName "libUtils.so.${UtilsVersion}")
+		ADD_CUSTOM_COMMAND(TARGET Utils POST_BUILD
+			COMMAND objcopy --only-keep-debug ./${TargetOutputName} ./${TargetOutputName}.debug COMMAND strip --strip-debug --strip-unneeded ./${TargetOutputName}
+			COMMAND objcopy --add-gnu-debuglink=${TargetOutputName}.debug ./${TargetOutputName}
+			WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/bin/)
+	ENDIF()
 ELSEIF(WIN32)
 	TARGET_COMPILE_DEFINITIONS(Utils PUBLIC -D_WIN32_WINNT=0x0600 PRIVATE -D_SCL_SECURE_NO_WARNINGS)
 	TARGET_COMPILE_OPTIONS(Utils PRIVATE $<$<OR:$<CONFIG:RELEASE>,$<CONFIG:MINSIZEREL>,$<CONFIG:RELWITHDEBINFO>>:/GL>)

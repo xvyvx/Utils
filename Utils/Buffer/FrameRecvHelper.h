@@ -3,6 +3,8 @@
 
 #include "CircularBuffer.h"
 
+class LinearBuffer;
+
 /**
  * Frame probe helper.
  */

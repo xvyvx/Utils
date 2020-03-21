@@ -29,27 +29,37 @@ public:
 	/**
 	 * Copy constructor(deleted)
 	 */
-	WaitEvent(const WaitEvent&) = delete;
+	WaitEvent(const WaitEvent &) = delete;
 
 	/**
 	 * Move constructor(deleted)
 	 */
-	WaitEvent(const WaitEvent&&) = delete;
+	WaitEvent(const WaitEvent &&) = delete;
 
 	/**
 	 * Assignment operator(deleted)
 	 */
-	WaitEvent& operator=(const WaitEvent&) = delete;
+	WaitEvent &operator=(const WaitEvent &) = delete;
 
 	/**
 	 * Move assignment operator(deleted)
 	 */
-	WaitEvent& operator=(const WaitEvent&&) = delete;
+	WaitEvent &operator=(const WaitEvent &&) = delete;
 
 	/**
 	 * Waits until caller is signaled.
 	 */
 	void Wait();
+
+	/**
+	 * Waits until caller is signaled or timeout is elapsed.
+	 *
+	 * @param milliSeconds timeout value(in millisecond).
+	 * 
+	 * @return True-successful wait the event,
+	 * False-the time-out interval has elapsed before another thread has attempted to signal the sleeping thread.
+	 */
+	bool TimedWait(us32 milliSeconds);
 
 	/**
 	 * Signals the wait thread.
@@ -66,29 +76,29 @@ public:
 	operator bool() const;
 
 private:
-#if defined(IS_WINDOWS)
-	HANDLE m_evt;   /**< Handle of the windows event. */
-#elif defined(IS_UNIX)
 	/**
 	 * Values that represent wait event status.
 	 */
 	enum Status
 	{
-		Status_Normal, /**< Normal status. */
+		Status_Normal,   /**< Normal status. */
 		Status_Signaled, /**< Signaled status. */
-		Status_Error /**< Error status. */
+		Status_Error	 /**< Error status. */
 	};
+	
+#if defined(IS_WINDOWS)
+	CONDITION_VARIABLE m_cond; /**< Handle of the windows CONDITION_VARIABLE. */
 
-	pthread_mutex_t m_mutex;	/**< Handle of the pthread mutex. */
+	CRITICAL_SECTION m_cs; /**< Handle of the windows CRITICAL_SECTION. */
+#elif defined(IS_UNIX)
+	pthread_mutex_t m_mutex; /**< Handle of the pthread mutex. */
 
-	pthread_cond_t m_cond;  /**< Handle of the pthread condition variable. */
-
-	volatile Status m_status;   /**< Current status of this wait event. */
+	pthread_cond_t m_cond; /**< Handle of the pthread condition variable. */
 #else
 #error Unsupportted platform.
 #endif
 
-
+	volatile Status m_status; /**< Current status of this wait event. */
 };
 
 #endif /* EVENT_H */

@@ -513,14 +513,13 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::UninstallSvc()
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvc()
 {
-	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
-	if (!logWatchThread)
+	if(!::SetCurrentDirectoryA(PathHelper::AppDeployPath().c_str()))
 	{
 		return 1;
 	}
-	if(!::SetCurrentDirectoryA(PathHelper::AppDeployPath().c_str()))
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	if (!logWatchThread)
 	{
-		LOG4CPLUS_ERROR_FMT(log, "设置当前路径失败，退出执行，错误代码：%d。", GetLastError());
 		return 1;
 	}
 
@@ -565,7 +564,6 @@ template<typename T, T *Proc> void WINAPI ApplicationBase<T, Proc>::ServiceMain(
 	{
 		::Sleep(delayTime * 1000);
 	}
-	AppInstance->m_stopEvt = ::CreateEvent(nullptr, false, false, nullptr);
 	if (!AppInstance->m_stopEvt)
 	{
 		LOG4CPLUS_ERROR_FMT(log, "创建控制事件失败，错误代码：%d", GetLastError());

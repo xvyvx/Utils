@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <bsd/libutil.h>
 #include <memory>
 #include <iostream>
@@ -16,7 +17,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
-#include "../Concurrent/WaitEvent.h"
 #include "IProgressReporter.h"
 #include "SystemdProgressReporter.h"
 #include "../Common/PathHelper.h"
@@ -135,9 +135,8 @@ private:
 		SysVDaemonIniResult_SetsidFailed,   /**< Constant representing setsid call failed */
 		SysVDaemonIniResult_SecondForkFailed,   /**< Constant representing second fork call failed */
 		SysVDaemonIniResult_DaemonOpenNullFileFailed,   /**< Constant representing the daemon process open null file descriptor failed */
-		OpenNullFileFailed_DaemonRedirectFailed,	/**< Constant representing the daemon process redirect stdin,stdout,stderr failed */
+		SysVDaemonIniResult_DaemonRedirectFailed,	/**< Constant representing the daemon process redirect stdin,stdout,stderr failed */
 		SysVDaemonIniResult_DaemonInitFailed,   /**< Constant representing the daemon process initialize failed */
-		SysVDaemonIniResult_DaemonCreateSyncEvtFailed,  /**< Constant representing the daemon process create synchronise event failed */
 		SysVDaemonIniResult_DaemonWritePIDFileFailed,   /**< Constant representing the daemon process write PID file failed */
 		SysVDaemonIniResult_DaemonStartupFailed /**< Constant representing the daemon process call startup failed */
 	};
@@ -221,9 +220,11 @@ private:
 	/**
 	 * Initializes execution environment.
 	 *
-	 * @return Non nullptr if it succeeds, nullptr if it fails.
+	 * @param [out] signalSet signal mask which is used to wait stop signals.
+	 *
+	 * @returns Non nullptr if it succeeds, nullptr if it fails.
 	 */
-	std::unique_ptr<log4cplus::ConfigureAndWatchThread> Initialize();
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> Initialize(sigset_t* signalSet);
 
 	/**
 	 * Initializes the daemon install type and name.
@@ -247,13 +248,6 @@ private:
 	 * @returns Pipe file descriptor.
 	 */
 	int SysVDaemonChildInitialize(int writePipe);
-
-	/**
-	 * Signal handler entry.
-	 *
-	 * @param sigNum The signal number.
-	 */
-	static void SignalHandler(int sigNum);
 
 	/**
 	 * Writes a notify message to pipe.
@@ -337,8 +331,6 @@ private:
 
 	pidfh *m_pidFile;   /**< The PID file pointer if execute as systemV daemon. */
 
-	std::unique_ptr<WaitEvent> m_evt;   /**< WaitEvent for internal use.*/
-
 	std::string m_serviceName;  /**< Installed service name. */
 
 	DaemonType m_svcType;   /**< Installed daemon type. */
@@ -356,7 +348,7 @@ template<typename T, T *Proc> log4cplus::Logger ApplicationBase<T, Proc>::log = 
 
 template<typename T, T *Proc> typename ApplicationBase<T, Proc>::ParamEntry ApplicationBase<T, Proc>::ParamEntries[EntrySize];
 
-template<typename T, T *Proc> ApplicationBase<T, Proc>::ApplicationBase() : m_optionsDesc("Options"), m_vm(), m_pidFile(nullptr), m_evt(), m_serviceName(), m_svcType(DaemonType_None)
+template<typename T, T *Proc> ApplicationBase<T, Proc>::ApplicationBase() : m_optionsDesc("Options"), m_vm(), m_pidFile(nullptr), m_serviceName(), m_svcType(DaemonType_None)
 	, m_reporter(nullptr)
 {
 	if (AppInstance)
@@ -413,27 +405,26 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::Run(int argc, char *
 
 template<typename T, T *Proc> us32 ApplicationBase<T, Proc>::ExitApplication()
 {
-	SignalHandler(SIGTERM);
-	return 0;
+	return kill(getpid(), SIGTERM);
 }
 
 template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunNormal()
 {
-	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	sigset_t signalSet;
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize(&signalSet);
 	if (!logWatchThread)
 	{
-		return 1;
-	}
-	if (!m_evt)
-	{
-		LOG4CPLUS_ERROR(log, "创建控制事件失败。");
 		return 1;
 	}
 	int ret = 0;
 	m_reporter.reset(new NullReport());
 	if (Proc->Startup(*m_reporter, m_vm, log))
 	{
-		m_evt->Wait();
+		int signalNum, waitResult = 1;
+		while (waitResult)
+		{
+			waitResult = sigwait(&signalSet, &signalNum);
+		}
 		Proc->Exit(*m_reporter, log);
 	}
 	else
@@ -465,17 +456,12 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemV()
 	auto pipeDeleter = [](int* pipeDesc) {close(*pipeDesc); };
 	std::unique_ptr<int, decltype((pipeDeleter))> pipeGuard(&notifyPipe, pipeDeleter);
 
-	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	sigset_t signalSet;
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize(&signalSet);
 	if (!logWatchThread)
 	{
 		WriteNotifyPipeMsg(notifyPipe, SysVDaemonIniResult_DaemonInitFailed);
 		return SysVDaemonIniResult_DaemonInitFailed;
-	}
-	if (!m_evt)
-	{
-		WriteNotifyPipeMsg(notifyPipe, SysVDaemonIniResult_DaemonCreateSyncEvtFailed);
-		LOG4CPLUS_ERROR(log, "创建控制事件失败。");
-		return SysVDaemonIniResult_DaemonCreateSyncEvtFailed;
 	}
 	int ret = pidfile_write(m_pidFile);
 	if (ret == -1)
@@ -493,7 +479,11 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemV()
 		{
 			WriteNotifyPipeMsg(notifyPipe, SysVDaemonIniResult_Successful);
 			pipeGuard.reset();
-			m_evt->Wait();
+			int signalNum, waitResult = 1;
+			while (waitResult)
+			{
+				waitResult = sigwait(&signalSet, &signalNum);
+			}
 			Proc->Exit(*m_reporter, log);
 			AppInstance->m_reporter->ReportNewStatus(Status_Stoped, 0);
 		}
@@ -517,16 +507,11 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemd()
 		return 1;
 	}
 	m_reporter->ReportNewStatus(Status_StartPending, 30000);
-	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize();
+	sigset_t signalSet;
+	std::unique_ptr<log4cplus::ConfigureAndWatchThread> logWatchThread = Initialize(&signalSet);
 	if (!logWatchThread)
 	{
 		m_reporter->ReportNewStatus(Status_StopPending, 30000, 1);
-		return 1;
-	}
-	if (!m_evt)
-	{
-		m_reporter->ReportNewStatus(Status_StopPending, 30000, 1);
-		LOG4CPLUS_ERROR(log, "创建控制事件失败。");
 		return 1;
 	}
 	DelayExec(report);
@@ -534,7 +519,11 @@ template<typename T, T *Proc> int ApplicationBase<T, Proc>::RunSvcSystemd()
 	if (Proc->Startup(*m_reporter, m_vm, log))
 	{
 		m_reporter->ReportNewStatus(Status_Running, 0);
-		m_evt->Wait();
+		int signalNum, waitResult = 1;
+		while (waitResult)
+		{
+			waitResult = sigwait(&signalSet, &signalNum);
+		}
 		Proc->Exit(*m_reporter, log);
 	}
 	else
@@ -699,36 +688,28 @@ template<typename T,T *Proc> int ApplicationBase<T,Proc>::UninstallDaemonImpl(co
 	return 0;
 }
 
-template<typename T,T *Proc> std::unique_ptr<log4cplus::ConfigureAndWatchThread> ApplicationBase<T,Proc>::Initialize()
+template<typename T,T *Proc> std::unique_ptr<log4cplus::ConfigureAndWatchThread> ApplicationBase<T,Proc>::Initialize(sigset_t* signalSet)
 {
+	if (chdir(PathHelper::AppDeployPath().c_str()) != 0)
+	{
+		return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
+	}
+
+	if (signal(SIGTTIN, SIG_IGN) == SIG_ERR || signal(SIGTTOU, SIG_IGN) == SIG_ERR)
+	{
+		return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
+	}
+	if (sigemptyset(signalSet) != 0 || sigaddset(signalSet, SIGTERM) != 0 || sigaddset(signalSet, SIGINT) != 0 || sigaddset(signalSet, SIGQUIT) != 0
+		|| (m_svcType == DaemonType_None && sigaddset(signalSet, SIGHUP) != 0)
+		|| pthread_sigmask(SIG_BLOCK, signalSet, nullptr) != 0)
+	{
+		return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
+	}
+
 	//TODO 自定义路径
 	std::string path = PathHelper::AppDeployPath();
 	PathHelper::Combine(&path, "Configuration", "log4cplus.properties", 0);
 	std::unique_ptr<log4cplus::ConfigureAndWatchThread> watchThread(new log4cplus::ConfigureAndWatchThread(path, 6000));
-
-	if (chdir(PathHelper::AppDeployPath().c_str()) != 0)
-	{
-		LOG4CPLUS_ERROR_FMT(log, "设置当前路径失败，退出执行，错误代码：%d", errno);
-		return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
-	}
-
-	struct sigaction act;
-	act.sa_handler = ApplicationBase<T, Proc>::SignalHandler;
-	if (sigemptyset(&act.sa_mask) == -1)
-	{
-		LOG4CPLUS_ERROR_FMT(log, "初始化信号掩码失败，退出执行，错误代码：%d", errno);
-		return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
-	}
-	act.sa_flags = 0;
-	act.sa_restorer = 0;
-	if (sigaction(SIGTERM, &act, nullptr) == -1 || sigaction(SIGINT, &act, nullptr) == -1 || sigaction(SIGQUIT, &act, nullptr) == -1
-		|| sigaction(SIGTTIN, &act, nullptr) == -1|| sigaction(SIGTTOU, &act, nullptr) == -1)
-	{
-		LOG4CPLUS_ERROR_FMT(log, "注册信号处理程序失败，退出执行，错误代码：%d", errno);
-		return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
-	}
-
-	m_evt.reset(new WaitEvent());
 	return watchThread;
 }
 
@@ -754,22 +735,6 @@ template<typename T, T* Proc> void ApplicationBase<T, Proc>::InitializeDaemonNam
 	}
 }
 
-template<typename T,T *Proc> void ApplicationBase<T,Proc>::SignalHandler(int sigNum)
-{
-	switch (sigNum)
-	{
-	case SIGTERM:
-	case SIGINT:
-	case SIGQUIT:
-		AppInstance->m_reporter->ReportNewStatus(Status_StopPending, 30000);
-		AppInstance->m_evt->Signal();
-		break;
-	default:
-		//SIGTTIN,SIGTTOU
-		break;
-	}
-}
-
 template<typename T, T* Proc> int ApplicationBase<T, Proc>::SysVDaemonInitialize(int* writePipe)
 {
 	int pipeDesc[2];
@@ -789,6 +754,8 @@ template<typename T, T* Proc> int ApplicationBase<T, Proc>::SysVDaemonInitialize
 		close(pipeDesc[1]);
 		pidfile_close(m_pidFile);
 		m_pidFile = nullptr;
+		int exitStatus;
+		wait(&exitStatus);
 		us8 childResult = 0;
 		ssize_t readBytes = read(pipeDesc[0], &childResult, 1);
 		close(pipeDesc[0]);
@@ -836,10 +803,10 @@ template<typename T, T* Proc> int ApplicationBase<T, Proc>::SysVDaemonChildIniti
 		}
 		if (dup2(nullDesc, STDIN_FILENO) == -1 || dup2(nullDesc, STDOUT_FILENO) == -1 || dup2(nullDesc, STDERR_FILENO) == -1)
 		{
-			WriteNotifyPipeMsg(writePipe, OpenNullFileFailed_DaemonRedirectFailed);
+			WriteNotifyPipeMsg(writePipe, SysVDaemonIniResult_DaemonRedirectFailed);
 			close(writePipe);
 			close(nullDesc);
-			return OpenNullFileFailed_DaemonRedirectFailed;
+			return SysVDaemonIniResult_DaemonRedirectFailed;
 		}
 		close(nullDesc);
 		umask(0);

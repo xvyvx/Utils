@@ -15,21 +15,20 @@ env:
     - CONFIG=Release
     - CONFIG=Debug
 
-matrix:
-  exclude:
-    - os: osx
-      compiler: gcc
-
 before_install:
   - |
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
       sudo apt-get update -qq
-    else
-      brew update
     fi
 
 install:
   - THIRD_DIR="$TRAVIS_BUILD_DIR/3rd"
+  - |
+    if [[ "$CC" = "clang" ]]; then
+      export BOOST_COMPILER_FLAG="-DBoost_COMPILER=-clang70" \
+        CLANG_COMPILE_FLAG="-stdlib=libc++" \
+        CLANG_LINK_FLAG="-fuse-ld=lld -lc++ -lc++abi";
+    fi
   - |
     if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
       sudo apt-get -qq install -y unzip libbsd-dev socat
@@ -37,24 +36,20 @@ install:
       cd $THIRD_DIR
       wget --no-check-certificate --quiet https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.bz2
       tar xjf ./boost_1_67_0.tar.bz2 && cd ./boost_1_67_0/ && ./bootstrap.sh
-      ./bjam stage --toolset=$CC cflags="-fPIC" cxxflags="-std=c++11 -fPIC" linkflags="-fPIC" --with-system --with-thread --with-regex --with-filesystem --with-program_options --with-atomic --with-date_time --with-test --stagedir="./stage" link=static runtime-link=shared threading=multi --layout=versioned variant=$(tr 'A-Z' 'a-z'<<<"$CONFIG")
+      ./bjam stage --toolset=$CC cflags="-fPIC" cxxflags="-std=c++11 -fPIC $CLANG_COMPILE_FLAG" \
+        linkflags="-fPIC $CLANG_LINK_FLAG" --with-system --with-thread --with-regex --with-filesystem --with-program_options \
+        --with-atomic --with-date_time --with-test --stagedir="./stage" link=static runtime-link=shared threading=multi \
+        --layout=versioned variant=$(tr 'A-Z' 'a-z'<<<"$CONFIG")
       cd ./stage/lib && for file in `ls`;do mv $file `echo $file|sed 's/-x64//g'`;done;
       cd $THIRD_DIR
       wget --no-check-certificate --quiet https://github.com/log4cplus/log4cplus/archive/REL_1_2_0.zip
       unzip -q REL_1_2_0.zip
       cd log4cplus-REL_1_2_0 && mkdir build && cd build
-      cmake -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_CXX_FLAGS="-std=c++11" -DLOG4CPLUS_BUILD_TESTING=OFF -DLOG4CPLUS_BUILD_LOGGINGSERVER=OFF ..
+      cmake -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_CXX_FLAGS="-std=c++11 $CLANG_COMPILE_FLAG" \
+        -DCMAKE_SHARED_LINKER_FLAGS="$CLANG_LINK_FLAG" -DLOG4CPLUS_BUILD_TESTING=OFF -DLOG4CPLUS_BUILD_LOGGINGSERVER=OFF ..
       make && sudo make install && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
       cd $THIRD_DIR
       mkdir otl && cd otl && wget -q http://otl.sourceforge.net/otlv4_h2.zip && unzip -q otlv4_h2.zip
-    else
-      brew upgrade cmake || brew install cmake
-      brew install boost log4cplus
-      mkdir $THIRD_DIR && cd $THIRD_DIR
-      curl -O https://github.com/JackieXie168/libbsd/archive/0.8.3-macosx.zip
-      unzip -q 0.8.3-macosx.zip
-      cd libbsd-0.8.3-macosx
-      ./autogen && ./configure && make && make install
     fi
   - cmake --version
 
@@ -62,10 +57,13 @@ before_script:
   - cd $TRAVIS_BUILD_DIR
   - mkdir build && cd ./build
   - if [[ "$CXX" = "g++" && "$CONFIG" = "Debug" && "$TRAVIS_OS_NAME" = "linux" ]]; then export COVERAGE_FLAGS="--coverage"; fi
-  - if [[ "$CC" = "clang" ]]; then export BOOST_COMPILER_FLAG="-DBoost_COMPILER=-clang70"; fi
-  - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 -DCMAKE_CXX_FLAGS="$COVERAGE_FLAGS" -DBOOST_INCLUDEDIR="$THIRD_DIR/boost_1_67_0" -DBOOST_LIBRARYDIR="$THIRD_DIR/boost_1_67_0/stage/lib" $BOOST_COMPILER_FLAG -DCMAKE_BUILD_TYPE=$CONFIG ..
+  - cmake -Dotl_INCLUDEDIR=$TRAVIS_BUILD_DIR/3rd -Dotl_VERSION_MAJOR=4 \
+      -DCMAKE_CXX_FLAGS="$COVERAGE_FLAGS $CLANG_COMPILE_FLAG" -DCMAKE_SHARED_LINKER_FLAGS="$CLANG_LINK_FLAG" \
+      -DCMAKE_EXE_LINKER_FLAGS="$CLANG_LINK_FLAG" -DBOOST_INCLUDEDIR="$THIRD_DIR/boost_1_67_0" \
+      -DBOOST_LIBRARYDIR="$THIRD_DIR/boost_1_67_0/stage/lib" $BOOST_COMPILER_FLAG -DCMAKE_BUILD_TYPE=$CONFIG ..
 
 script:
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/clang-7.0.0/lib
   - sudo env "PATH=$PATH" cmake --build . --target install && ctest --output-on-failure
 
 after_success:

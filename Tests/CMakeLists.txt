@@ -1,5 +1,5 @@
 SET(TestsSources LinearBufferTest.cpp CircularBufferTest.cpp BufferCacheTest.cpp TlsTest.cpp TcpChannelTest.cpp SerialportChannelTest.cpp PathHelperTest.cpp BinaryHelperTest.cpp
-	DiagnosticsTest.cpp ThreadPoolTest.cpp BlackMagicsTest.cpp)
+	DiagnosticsTest.cpp ThreadPoolTest.cpp BlackMagicsTest.cpp WaitEventTest.cpp)
 
 ADD_EXECUTABLE(UtilsTest ${TestsSources})
 TARGET_INCLUDE_DIRECTORIES(UtilsTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../Utils)
@@ -39,3 +39,5 @@ AddToTest(DiagnosticsTest DiagnosticsTest/GetCPUUsageTest)
 AddToTest(ThreadPoolTest ThreadPoolTest/GeneralTest)
 
 AddToTest(BlackMagicsTest BlackMagicsTest/GeneralTest)
+
+AddToTest(WaitEventTest WaitEventTest/GeneralTest)

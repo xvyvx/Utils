@@ -1,4 +1,4 @@
-﻿#ifndef SQLDATABASEPOOL_H
+#ifndef SQLDATABASEPOOL_H
 #define SQLDATABASEPOOL_H
 
 #include "../../../Common/ObjectPoolBase.h"
@@ -10,53 +10,55 @@ extern const char SqlDatabasePoolLoggerName[];
 class SqlDatabaseDummyClearFunc
 {
 public:
-	inline void operator()(ISqlDatabase *obj)
-	{
-	}
+    inline void operator()(ISqlDatabase *obj)
+    {
+    }
 };
 
 class SqlDatabaseElementTrait
 {
 public:
-	static SqlDatabaseType GetKey(ISqlDatabase &obj)
-	{
-		return obj.Type();
-	}
+    static SqlDatabaseType GetKey(ISqlDatabase &obj)
+    {
+        return obj.Type();
+    }
 };
 
 class SqlDatabaseFactory
 {
 public:
-	ISqlDatabase* operator()(SqlDatabaseType type);
+    ISqlDatabase* CreateObj(SqlDatabaseType type);
 
-	const char *m_connStr;
+    void FreeObj(ISqlDatabase *obj);
+
+    const char *m_connStr;
 };
 
 class UTILS_EXPORTS_API SqlDatabsePool :public ObjectPoolBase
-	<
-	SqlDatabaseType,
-	ISqlDatabase,
-	SqlDatabaseElementTrait,
-	SqlDatabsePool,
-	SqlDatabaseFactory, 
-	SqlDatabaseDummyClearFunc,
-	SqlDatabasePoolLoggerName,
-	std::equal_to<SqlDatabaseType>,
-	std::equal_to<SqlDatabaseType>
-	>
+    <
+    SqlDatabaseType,
+    ISqlDatabase,
+    SqlDatabaseElementTrait,
+    SqlDatabsePool,
+    SqlDatabaseFactory, 
+    SqlDatabaseDummyClearFunc,
+    SqlDatabasePoolLoggerName,
+    std::equal_to<SqlDatabaseType>,
+    std::equal_to<SqlDatabaseType>
+    >
 {
-	friend class ObjectPoolBase
-		<
-		SqlDatabaseType,
-		ISqlDatabase,
-		SqlDatabaseElementTrait,
-		SqlDatabsePool,
-		SqlDatabaseFactory, 
-		SqlDatabaseDummyClearFunc,
-		SqlDatabasePoolLoggerName,
-		std::equal_to<SqlDatabaseType>,
-		std::equal_to<SqlDatabaseType>
-		>;
+    friend class ObjectPoolBase
+        <
+        SqlDatabaseType,
+        ISqlDatabase,
+        SqlDatabaseElementTrait,
+        SqlDatabsePool,
+        SqlDatabaseFactory, 
+        SqlDatabaseDummyClearFunc,
+        SqlDatabasePoolLoggerName,
+        std::equal_to<SqlDatabaseType>,
+        std::equal_to<SqlDatabaseType>
+        >;
 };
 
 #endif /* SQLDATABASEPOOL_H */

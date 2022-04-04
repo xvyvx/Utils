@@ -1,4 +1,4 @@
-﻿#ifndef CIRCULARBUFFERCACHE_H
+#ifndef CIRCULARBUFFERCACHE_H
 #define CIRCULARBUFFERCACHE_H
 
 #include "BufferCacheBase.h"
@@ -9,10 +9,15 @@ extern const char CircularBufferCacheLoggerName[];
 class CircularBufferCacheFactory
 {
 public:
-	inline CircularBuffer* operator()(size_t requireSize)
-	{
-		return new CircularBuffer(requireSize);
-	}
+    inline CircularBuffer* CreateObj(size_t requireSize)
+    {
+        return new CircularBuffer(requireSize);
+    }
+
+    inline void FreeObj(CircularBuffer *obj)
+    {
+        delete obj;
+    }
 };
 
 /**
@@ -22,24 +27,24 @@ typedef BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBuff
 
 extern template class UTILS_DECL_API ObjectPoolBase
 <
-	size_t,
-	CircularBuffer,
-	BufferElementTrait<CircularBuffer>,
-	BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>,
-	CircularBufferCacheFactory,
-	BufferCacheBaseClearFunc<CircularBuffer>,
-	CircularBufferCacheLoggerName
+    size_t,
+    CircularBuffer,
+    BufferElementTrait<CircularBuffer>,
+    BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>,
+    CircularBufferCacheFactory,
+    BufferCacheBaseClearFunc<CircularBuffer>,
+    CircularBufferCacheLoggerName
 >;
 
 extern template class UTILS_DECL_API ObjectPoolElemDeleter
 <
-	size_t,
-	CircularBuffer,
-	BufferElementTrait<CircularBuffer>,
-	BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>,
-	CircularBufferCacheFactory,
-	BufferCacheBaseClearFunc<CircularBuffer>,
-	CircularBufferCacheLoggerName
+    size_t,
+    CircularBuffer,
+    BufferElementTrait<CircularBuffer>,
+    BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>,
+    CircularBufferCacheFactory,
+    BufferCacheBaseClearFunc<CircularBuffer>,
+    CircularBufferCacheLoggerName
 >;
 
 extern template class UTILS_DECL_API BufferCacheBase<CircularBuffer, CircularBufferCacheFactory, CircularBufferCacheLoggerName>;

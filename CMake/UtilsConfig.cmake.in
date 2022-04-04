@@ -1,13 +1,13 @@
 @PACKAGE_INIT@
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR})
 include(CMakeFindDependencyMacro)
 find_dependency(Boost 1.66 REQUIRED)
 find_dependency(log4cplus 1.2.0 REQUIRED)
 find_dependency(otl 4. REQUIRED)
-IF(UNIX)
-	find_dependency(libbsd REQUIRED)
-ENDIF()
+if(UNIX)
+    find_dependency(libbsd REQUIRED)
+endif()
 
 include("@PACKAGE_InstLibDir@/cmake/Utils/@ExportFileName@")
 set_and_check(Utils_INCLUDE_DIR "@PACKAGE_InstIncludeDir@")

@@ -1,4 +1,4 @@
-﻿#ifndef IASYNCCHANNELHANDLER_H
+#ifndef IASYNCCHANNELHANDLER_H
 #define IASYNCCHANNELHANDLER_H
 
 #include <memory>
@@ -12,53 +12,53 @@ class UTILS_EXPORTS_API IAsyncChannelHandler
 {
 public:
 
-	/**
-	 * Defines an alias representing the std::shared_ptr<IAsyncChannelHandler>.
-	 */
-	typedef std::shared_ptr<IAsyncChannelHandler> ptr_t;
+    /**
+     * Defines an alias representing the std::shared_ptr<IAsyncChannelHandler>.
+     */
+    typedef std::shared_ptr<IAsyncChannelHandler> ptr_t;
 
-	/**
-	 * Default constructor
-	 */
-	IAsyncChannelHandler();
+    /**
+     * Default constructor
+     */
+    IAsyncChannelHandler();
 
-	/**
-	 * Destructor
-	 */
-	virtual ~IAsyncChannelHandler();
+    /**
+     * Destructor
+     */
+    virtual ~IAsyncChannelHandler();
 
-	/**
-	 * The handler to be called when the open operation completes.
-	 *
-	 * @param err Result of operation.
-	 */
-	virtual void EndOpen(const boost::system::error_code &err) = 0;
+    /**
+     * The handler to be called when the open operation completes.
+     *
+     * @param err Result of operation.
+     */
+    virtual void EndOpen(const boost::system::error_code &err) = 0;
 
-	/**
-	 * The handler to be called when the read operation completes.
-	 *
-	 * @param err Result of operation.
-	 * @param bytesTransferred Number of bytes read to the buffers.
-	 * 	If an error occurred,this will be less than the sum of the buffer sizes.
-	 * @param ctx User defined context data,passed to @ref IAsyncChannel::AsyncReadSome.
-	 */
-	virtual void EndRead(const boost::system::error_code &err, std::size_t bytesTransferred, void *ctx) = 0;
+    /**
+     * The handler to be called when the read operation completes.
+     *
+     * @param err Result of operation.
+     * @param bytesTransferred Number of bytes read to the buffers.
+     * 	If an error occurred,this will be less than the sum of the buffer sizes.
+     * @param ctx User defined context data,passed to @ref IAsyncChannel::AsyncReadSome.
+     */
+    virtual void EndRead(const boost::system::error_code &err, std::size_t bytesTransferred, void *ctx) = 0;
 
-	/**
-	 * The handler to be called when the write operation completes.
-	 *
-	 * @param err Result of operation.
-	 * @param bytesTransferred Number of bytes written from the buffers.
-	 * @param ctx User defined context data,passed to @ref IAsyncChannel::AsyncWrite.
-	 */
-	virtual void EndWrite(const boost::system::error_code &err, std::size_t bytesTransferred, void *ctx) = 0;
+    /**
+     * The handler to be called when the write operation completes.
+     *
+     * @param err Result of operation.
+     * @param bytesTransferred Number of bytes written from the buffers.
+     * @param ctx User defined context data,passed to @ref IAsyncChannel::AsyncWrite.
+     */
+    virtual void EndWrite(const boost::system::error_code &err, std::size_t bytesTransferred, void *ctx) = 0;
 
-	/**
-	 * The handler to be called when the close operation completes.
-	 *
-	 * @param err Result of operation.
-	 */
-	virtual void EndClose(const boost::system::error_code &err) = 0;
+    /**
+     * The handler to be called when the close operation completes.
+     *
+     * @param err Result of operation.
+     */
+    virtual void EndClose(const boost::system::error_code &err) = 0;
 };
 
 #endif /* IASYNCCHANNELHANDLER_H */

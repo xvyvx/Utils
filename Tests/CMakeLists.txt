@@ -1,17 +1,19 @@
-SET(TestsSources LinearBufferTest.cpp CircularBufferTest.cpp BufferCacheTest.cpp TlsTest.cpp TcpChannelTest.cpp SerialportChannelTest.cpp PathHelperTest.cpp BinaryHelperTest.cpp
-	DiagnosticsTest.cpp ThreadPoolTest.cpp BlackMagicsTest.cpp WaitEventTest.cpp)
+set(TestsSources LinearBufferTest.cpp CircularBufferTest.cpp BufferCacheTest.cpp TlsTest.cpp TcpChannelTest.cpp SerialportChannelTest.cpp PathHelperTest.cpp BinaryHelperTest.cpp
+    DiagnosticsTest.cpp ThreadPoolTest.cpp BlackMagicsTest.cpp WaitEventTest.cpp)
 
-ADD_EXECUTABLE(UtilsTest ${TestsSources})
-TARGET_INCLUDE_DIRECTORIES(UtilsTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../Utils)
-TARGET_LINK_LIBRARIES(UtilsTest Boost::unit_test_framework Utils)
+add_executable(UtilsTest ${TestsSources})
+EnableGNUStyleStrip(TARGET UtilsTest)
+target_include_directories(UtilsTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../Utils)
+target_link_libraries(UtilsTest Boost::unit_test_framework Boost::timer Utils)
 
-MACRO(AddToTest TestName Filter)
-	ADD_TEST(NAME ${TestName} COMMAND UtilsTest --run_test=${Filter} --log_level=message)
-	SET_TESTS_PROPERTIES(${TestName} PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
-ENDMACRO(AddToTest)
+macro(AddToTest TestName Filter)
+    add_test(NAME ${TestName} COMMAND UtilsTest --run_test=${Filter} --log_level=message)
+    set_tests_properties(${TestName} PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
+endmacro(AddToTest)
 
 AddToTest(CircularBufferCacheTest BufferCacheTest/CircularBufferCacheTest)
 AddToTest(LinearBufferCacheTest BufferCacheTest/LinearBufferCacheTest)
+AddToTest(LinearBufferCacheHelperTest BufferCacheTest/LinearBufferCacheHelperTest)
 
 AddToTest(CircularBufferGeneralTest CircularBufferTest/GeneralTest)
 AddToTest(CircularBufferIteratorTest CircularBufferTest/IteratorTest)
@@ -23,9 +25,9 @@ AddToTest(ReadWriteTest LinearBufferTest/ReadWriteTest)
 
 AddToTest(TcpChannelGeneralTest TcpChannelTest/GeneralTest)
 
-IF(UNIX)
-	AddToTest(SerialPortChannelTest SerialPortChannelTest/GeneralTest)
-ENDIF()
+if(UNIX)
+    AddToTest(SerialPortChannelTest SerialPortChannelTest/GeneralTest)
+endif()
 
 AddToTest(TlsGeneralTest TlsTest/GeneralTest)
 

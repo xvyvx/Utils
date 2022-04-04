@@ -1,20 +1,20 @@
-﻿#ifndef OTLHDR_H
+#ifndef OTLHDR_H
 #define OTLHDR_H
 
 #include "../../../Common/CommonHdr.h"
 
 #if defined(USE_ODBC_DATABASE_UTILS)
-	#if defined(IS_WINDOWS)
-		#define OTL_ODBC
-	#elif defined(IS_UNIX)
-		#define OTL_ODBC_UNIX
-	#else
-		#error Unsupportted platform
-	#endif
+    #if defined(IS_WINDOWS)
+        #define OTL_ODBC
+    #elif defined(IS_UNIX)
+        #define OTL_ODBC_UNIX
+    #else
+        #error Unsupportted platform
+    #endif
 #endif
 
 #if defined(USE_OCI_DATABASE_UTILS)
-	#define OTL_ORA11G_R2
+    #define OTL_ORA11G_R2
 #endif
 
 #if defined (UNICODE)

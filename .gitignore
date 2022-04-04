@@ -250,3 +250,6 @@ ModelManifest.xml
 
 #3rd library directory
 3rd/
+
+#clangd config file
+.clangd

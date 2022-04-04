@@ -1,4 +1,4 @@
-﻿#ifndef APPLICATIONBASE_H
+#ifndef APPLICATIONBASE_H
 #define APPLICATIONBASE_H
 
 #include "../Common/CommonHdr.h"

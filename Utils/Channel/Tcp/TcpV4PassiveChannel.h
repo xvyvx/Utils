@@ -1,4 +1,4 @@
-﻿#ifndef TCPV4PASSIVECHANNEL_H
+#ifndef TCPV4PASSIVECHANNEL_H
 #define TCPV4PASSIVECHANNEL_H
 
 #include "TcpPassiveChannelBase.h"

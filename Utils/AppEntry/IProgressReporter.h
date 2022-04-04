@@ -1,5 +1,7 @@
-﻿#ifndef IPROGRESSREPORTER_H
+#ifndef IPROGRESSREPORTER_H
 #define IPROGRESSREPORTER_H
+
+#if 0
 
 #include "../Common/CommonHdr.h"
 
@@ -13,10 +15,10 @@
  */
 enum Status
 {
-	Status_StartPending = SERVICE_START_PENDING,
-	Status_Running = SERVICE_RUNNING,
-	Status_StopPending = SERVICE_STOP_PENDING,
-	Status_Stoped = SERVICE_STOPPED
+    Status_StartPending = SERVICE_START_PENDING,
+    Status_Running = SERVICE_RUNNING,
+    Status_StopPending = SERVICE_STOP_PENDING,
+    Status_Stoped = SERVICE_STOPPED
 };
 
 #else
@@ -26,10 +28,10 @@ enum Status
  */
 enum Status
 {
-	Status_StartPending,
-	Status_Running,
-	Status_StopPending,
-	Status_Stoped
+    Status_StartPending,
+    Status_Running,
+    Status_StopPending,
+    Status_Stoped
 };
 
 #endif
@@ -41,39 +43,39 @@ class UTILS_EXPORTS_API IProgressReporter
 {
 public:
 
-	/**
-	 * Default constructor
-	 */
-	IProgressReporter();
+    /**
+     * Default constructor
+     */
+    IProgressReporter();
 
-	/**
-	 * Destructor
-	 */
-	virtual ~IProgressReporter();
+    /**
+     * Destructor
+     */
+    virtual ~IProgressReporter();
 
-	/**
-	 * Increment current status progress.
-	 *
-	 * @param step Amount to increment by.
-	 * @param waitHint System service manager wait times after this call(in milliseconds).
-	 */
-	virtual void IncProgress(int step, int waitHint) = 0;
+    /**
+     * Increment current status progress.
+     *
+     * @param step Amount to increment by.
+     * @param waitHint System service manager wait times after this call(in milliseconds).
+     */
+    virtual void IncProgress(int step, int waitHint) = 0;
 
-	/**
-	 * Reports a new service running status.
-	 *
-	 * @param newStatus The new status.
-	 * @param waitHint System service manager wait times after this call(in milliseconds).
-	 * @param exitCode  (Optional) The exit code if status is Status_Stoped.
-	 */
-	virtual void ReportNewStatus(Status newStatus, int waitHint, us32 exitCode = 0) = 0;
+    /**
+     * Reports a new service running status.
+     *
+     * @param newStatus The new status.
+     * @param waitHint System service manager wait times after this call(in milliseconds).
+     * @param exitCode  (Optional) The exit code if status is Status_Stoped.
+     */
+    virtual void ReportNewStatus(Status newStatus, int waitHint, us32 exitCode = 0) = 0;
 
-	/**
-	 * Query current status.
-	 *
-	 * @return Current status.
-	 */
-	virtual Status CurrentStatus() = 0;
+    /**
+     * Query current status.
+     *
+     * @return Current status.
+     */
+    virtual Status CurrentStatus() = 0;
 };
 
 /**
@@ -85,41 +87,43 @@ class UTILS_EXPORTS_API NullReport :public IProgressReporter
 {
 public:
 
-	/**
-	 * Default constructor
-	 */
-	NullReport():IProgressReporter()
-	{
-	}
+    /**
+     * Default constructor
+     */
+    NullReport():IProgressReporter()
+    {
+    }
 
-	/**
-	 * Destructor
-	 */
-	virtual ~NullReport()
-	{
-	}
+    /**
+     * Destructor
+     */
+    virtual ~NullReport()
+    {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	virtual void IncProgress(int step, int waitHint) override
-	{
-	}
+    /**
+     * {@inheritDoc}
+     */
+    virtual void IncProgress(int step, int waitHint) override
+    {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	virtual void ReportNewStatus(Status newStatus, int waitHint, us32 exitCode = 0) override
-	{
-	}
+    /**
+     * {@inheritDoc}
+     */
+    virtual void ReportNewStatus(Status newStatus, int waitHint, us32 exitCode = 0) override
+    {
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	virtual Status CurrentStatus() override
-	{
-		return Status_Stoped;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    virtual Status CurrentStatus() override
+    {
+        return Status_Stoped;
+    }
 };
+
+#endif
 
 #endif /* IPROGRESSREPORTER_H */

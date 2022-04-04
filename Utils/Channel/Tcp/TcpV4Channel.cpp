@@ -1,5 +1,5 @@
-﻿#include "TcpV4Channel.h"
-#include "TcpChannelBaseImpl.h"
+#include "TcpV4Channel.h"
+#include "TcpChannelBase.hpp"
 
 const char TcpV4ChannelLoggerName[] = "TcpV4Channel";
 

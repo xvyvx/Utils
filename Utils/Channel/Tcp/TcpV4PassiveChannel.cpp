@@ -1,5 +1,5 @@
-﻿#include "TcpV4PassiveChannel.h"
-#include "TcpPassiveChannelBaseImpl.h"
+#include "TcpV4PassiveChannel.h"
+#include "TcpPassiveChannelBase.hpp"
 
 const char TcpV4PassiveChannelLoggerName[] = "TcpV4PassiveChannel";
 

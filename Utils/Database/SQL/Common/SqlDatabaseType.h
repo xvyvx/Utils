@@ -3,8 +3,8 @@
 
 enum class SqlDatabaseType :int
 {
-	ODBC,
-	OCI
+    ODBC,
+    OCI
 };
 
 #endif /* SQLDATABASETYPE_H */

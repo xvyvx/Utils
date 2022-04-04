@@ -1,4 +1,4 @@
-﻿#ifndef DIAGNOSTICSHELPER_H
+#ifndef DIAGNOSTICSHELPER_H
 #define DIAGNOSTICSHELPER_H
 
 #include "../Common/CommonHdr.h"
@@ -9,12 +9,12 @@
 class UTILS_EXPORTS_API DiagnosticsHelper
 {
 public:
-	/**
-	 * Gets CPU usage since previous call to this function.
-	 *
-	 * @return The CPU usage(0-100).
-	 */
-	static int GetCPUUsage();
+    /**
+     * Gets CPU usage since previous call to this function.
+     *
+     * @return The CPU usage(0-100).
+     */
+    static int GetProcessorUsage();
 };
 
 #endif /* DIAGNOSTICSHELPER_H */

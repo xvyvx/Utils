@@ -1,4 +1,4 @@
-﻿#include "WaitEvent.h"
+#include "WaitEvent.h"
 
 #if defined(IS_WINDOWS)
 
@@ -14,32 +14,22 @@ WaitEvent::~WaitEvent()
 
 void WaitEvent::Wait()
 {
-	TimedWait(INFINITE);
+	Wait([](){});
 }
 
 bool WaitEvent::TimedWait(us32 milliSeconds)
 {
-	EnterCriticalSection(&m_cs);
-	bool result = true;
-	while (m_status != Status_Signaled)
-	{
-		BOOL tempResult = SleepConditionVariableCS(&m_cond, &m_cs, milliSeconds);
-		if (!tempResult && ::GetLastError() == ERROR_TIMEOUT)
-		{
-			result = false;
-			break;
-		}
-	}
-	LeaveCriticalSection(&m_cs);
-	return result;
+	return TimedWait(milliSeconds, [](bool){});
 }
 
 void WaitEvent::Signal()
 {
-	EnterCriticalSection(&m_cs);
-	m_status = Status_Signaled;
-	WakeConditionVariable(&m_cond);
-	LeaveCriticalSection(&m_cs);
+	Signal([](){});
+}
+
+void WaitEvent::Reset()
+{
+	Reset([](){});
 }
 
 WaitEvent::operator bool() const
@@ -49,18 +39,27 @@ WaitEvent::operator bool() const
 
 #elif defined(IS_UNIX)
 
-#include <errno.h>
-
 WaitEvent::WaitEvent() : m_status(Status_Normal)
 {
+	pthread_condattr_t attr;
 	if (pthread_mutex_init(&m_mutex, NULL) != 0)
 	{
 		m_status = Status_Error;
 	}
-	else if (pthread_cond_init(&m_cond, NULL) != 0)
+	else if (pthread_condattr_init(&attr) != 0)
 	{
 		pthread_mutex_destroy(&m_mutex);
 		m_status = Status_Error;
+	}
+	else if(pthread_condattr_setclock(&attr, CLOCK_MONOTONIC) != 0 || pthread_cond_init(&m_cond, &attr) != 0)
+	{
+		pthread_condattr_destroy(&attr);
+		pthread_mutex_destroy(&m_mutex);
+		m_status = Status_Error;
+	}
+	else
+	{
+		pthread_condattr_destroy(&attr);
 	}
 }
 
@@ -75,38 +74,22 @@ WaitEvent::~WaitEvent()
 
 void WaitEvent::Wait()
 {
-	pthread_mutex_lock(&m_mutex);
-	while (m_status != Status_Signaled)
-	{
-		pthread_cond_wait(&m_cond, &m_mutex);
-	}
-	pthread_mutex_unlock(&m_mutex);
+	Wait([](){});
 }
 
-bool WaitEvent::TimedWait(us32 milliSeconds)
+bool WaitEvent::TimedWait(uint32_t milliSeconds)
 {
-	timespec timeout = {milliSeconds / 1000, milliSeconds % 1000 * 1000000};
-	pthread_mutex_lock(&m_mutex);
-	bool result = true;
-	while (m_status != Status_Signaled)
-	{
-		int tempResult = pthread_cond_timedwait(&m_cond, &m_mutex, &timeout);
-		if (tempResult == ETIMEDOUT)
-		{
-			result = false;
-			break;
-		}
-	}
-	pthread_mutex_unlock(&m_mutex);
-	return result;
+	return TimedWait(milliSeconds, [](bool){});
 }
 
 void WaitEvent::Signal()
 {
-	pthread_mutex_lock(&m_mutex);
-	m_status = Status_Signaled;
-	pthread_cond_signal(&m_cond);
-	pthread_mutex_unlock(&m_mutex);
+	Signal([](){});
+}
+
+void WaitEvent::Reset()
+{
+	Reset([](){});
 }
 
 WaitEvent::operator bool() const

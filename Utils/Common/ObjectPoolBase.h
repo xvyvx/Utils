@@ -1,4 +1,4 @@
-﻿#ifndef OBJECTPOOLBASE_H
+#ifndef OBJECTPOOLBASE_H
 #define OBJECTPOOLBASE_H
 
 #include <memory>
@@ -22,26 +22,26 @@
 * @tparam GetPredType  Function type used to match key when getting object from pool(default is std::less_equal<KeyType>).
  */
 template<
-	typename KeyType,
-	typename ElemType,
-	typename ElemTraitType,
-	typename SelfType,
-	typename FactoryType,
-	typename ClearFuncType,
-	const char *LoggerName,
-	typename FindPredType = std::equal_to<KeyType>,
-	typename GetPredType = std::less_equal<KeyType>
-	> class ObjectPoolElemDeleter
+    typename KeyType,
+    typename ElemType,
+    typename ElemTraitType,
+    typename SelfType,
+    typename FactoryType,
+    typename ClearFuncType,
+    const char *LoggerName,
+    typename FindPredType = std::equal_to<KeyType>,
+    typename GetPredType = std::less_equal<KeyType>
+    > class ObjectPoolElemDeleter
 {
 public:
-	/**
-	 * Delete function.
-	 * 
-	 * If the pool is destoried,the obj will be deleted.
-	 *
-	 * @param obj Returned resource object.
-	 */
-	void operator()(ElemType *obj);
+    /**
+     * Delete function.
+     * 
+     * If the pool is destoried,the obj will be deleted.
+     *
+     * @param obj Returned resource object.
+     */
+    void operator()(ElemType *obj);
 };
 
 /**
@@ -58,104 +58,114 @@ public:
 * @tparam GetPredType  Function type used to match key when getting object from pool(default is std::less_equal<KeyType>).
 */
 template<
-	typename KeyType, 
-	typename ElemType, 
-	typename ElemTraitType,
-	typename SelfType, 
-	typename FactoryType,
-	typename ClearFuncType,
-	const char *LoggerName,
-	typename FindPredType = std::equal_to<KeyType>,
-	typename GetPredType = std::less_equal<KeyType>
-	> class ObjectPoolBase
+    typename KeyType, 
+    typename ElemType, 
+    typename ElemTraitType,
+    typename SelfType, 
+    typename FactoryType,
+    typename ClearFuncType,
+    const char *LoggerName,
+    typename FindPredType = std::equal_to<KeyType>,
+    typename GetPredType = std::less_equal<KeyType>
+    > class ObjectPoolBase
 {
 public:
-	friend class ObjectPoolElemDeleter<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType>;
+    friend class ObjectPoolElemDeleter<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType>;
 
-	typedef ObjectPoolElemDeleter<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType> ObjectDeleter;
+    typedef ObjectPoolElemDeleter<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType> ObjectDeleter;
 
-	/**
-	 * Defines an alias representing the pointer whitch is used by caller.
-	 */
-	typedef std::unique_ptr<ElemType, ObjectDeleter> ptr_t;
+    /**
+     * Defines an alias representing the pointer whitch is used by caller.
+     */
+    typedef std::unique_ptr<ElemType, ObjectDeleter> ptr_t;
 
-	ObjectPoolBase(const ObjectPoolBase&) = delete;
+    ObjectPoolBase(const ObjectPoolBase&) = delete;
 
-	ObjectPoolBase(ObjectPoolBase&&) = delete;
+    ObjectPoolBase(ObjectPoolBase&&) = delete;
 
-	ObjectPoolBase& operator=(const ObjectPoolBase&) = delete;
+    ObjectPoolBase& operator=(const ObjectPoolBase&) = delete;
 
-	ObjectPoolBase& operator=(ObjectPoolBase&&) = delete;
+    ObjectPoolBase& operator=(ObjectPoolBase&&) = delete;
 
-	/**
-	 * Destructor,will release all objects owned by this pool.
-	 */
-	~ObjectPoolBase();
+    /**
+     * Destructor,will release all objects owned by this pool.
+     */
+    ~ObjectPoolBase();
 
-	/**
-	 * Gets the pool instance
-	 *
-	 * @return A reference to the global instance of ObjectPoolBase.
-	 */
-	static ObjectPoolBase& Instance()
-	{
-		if (!instance)
-		{
-			instance.reset(new SelfType());
-		}
-		return *instance;
-	}
+    /**
+     * Gets the pool instance
+     *
+     * @return A reference to the global instance of ObjectPoolBase.
+     */
+    static SelfType& Instance()
+    {
+        if (!instance)
+        {
+            instance.reset(new SelfType());
+        }
+        return *instance;
+    }
 
-	/**
-	 * Destories the global instance of ObjectPoolBase.
-	 */
-	static void Destory()
-	{
-		instance.reset();
-	}
+    /**
+     * Destories the global instance of ObjectPoolBase.
+     */
+    static void Destory()
+    {
+        instance.reset();
+    }
 
-	/**
-	 * Adds resource object to the object pool.
-	 *
-	 * @param requireKey The resource object's key(used to identify same resource object).
-	 * @param count Number of added resource object.
-	 */
-	void AddToObjectPool(KeyType requireKey, std::size_t count);
+    /**
+     * Adds resource object to the object pool.
+     *
+     * @param requireKey The resource object's key(used to identify same resource object).
+     * @param count Number of added resource object.
+     */
+    void AddToObjectPool(KeyType requireKey, std::size_t count);
 
-	/**
-	 * Gets a resource object identified by given key
-	 *
-	 * @param requireKey Object key.
-	 *
-	 * @return A ptr_t(resource object is owned by this pointer).
-	 */
-	ptr_t Get(KeyType requireKey);
+    /**
+     * Gets a resource object identified by given key
+     *
+     * @param requireKey Object key.
+     *
+     * @return A ptr_t(resource object is owned by this pointer).
+     */
+    ptr_t Get(KeyType requireKey);
 
 protected:
 
-	/**
-	 * Default constructor
-	 */
-	ObjectPoolBase();
+    /**
+     * Default constructor
+     */
+    ObjectPoolBase();
+
+    /**
+     * @brief Get logger
+     * 
+     * @return log4cplus::Logger& logger
+     */
+    static log4cplus::Logger& Logger()
+    {
+        return log;
+    }
 
 
 private:
-	typedef struct
-	{
-		KeyType m_key;  /**< Block key */
+    typedef struct _ObjectBlocks
+    {
+        KeyType m_key;  /**< Block key */
 
-		size_t m_allocatedCount = 0;	/**< Total number of allocated objects */
+        size_t m_allocatedCount = 0;	/**< Total number of allocated objects */
 
-		SpinLock<> m_lock;  /**< Thread sync lock */
+        SpinLock<> m_lock;  /**< Thread sync lock */
 
-		std::vector<ElemType*> m_objects;   /**< Free objects */
-	} ObjectBlocks; /**< Internal object block type */
+        std::vector<ElemType*> m_objects;   /**< Free objects */
+    } ObjectBlocks; /**< Internal object block type */
 
-	std::list<ObjectBlocks> m_blocks;   /**< Internal object blocks */
+    std::list<ObjectBlocks> m_blocks;   /**< Internal object blocks */
 
-	static std::shared_ptr<ObjectPoolBase> instance;	/**< Global pool instance */
+    static std::shared_ptr<SelfType> instance;	/**< Global pool instance */
 
-	static log4cplus::Logger log;   /**< The logger */
+    static log4cplus::Logger log;   /**< The logger */
 };
 
 #endif /* OBJECTPOOLBASE_H */

@@ -1,4 +1,4 @@
-﻿#ifndef TCPV4CHANNEL_H
+#ifndef TCPV4CHANNEL_H
 #define TCPV4CHANNEL_H
 
 #include "TcpChannelBase.h"

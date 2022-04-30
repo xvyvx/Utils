@@ -1,4 +1,4 @@
-﻿#include "BlackMagics.h"
+#include "BlackMagics.h"
 #include <chrono>
 #include <thread>
 
@@ -16,25 +16,25 @@ extern "C" void _mm_pause();
 
 UTILS_EXPORTS_API void DefaultBlackMagicFunc(unsigned count)
 {
-	if (count < 4)
-	{
-	}
+    if (count < 4)
+    {
+    }
 #if defined( CALL_SMT_PAUSE )
-	else if (count < 16)
-	{
-		CALL_SMT_PAUSE
-	}
+    else if (count < 16)
+    {
+        CALL_SMT_PAUSE
+    }
 #endif
-	else if (count < 32)
-	{
-		std::this_thread::yield();
-	}
-	else if (count < 64)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
-	}
-	else
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	}
+    else if (count < 32)
+    {
+        std::this_thread::yield();
+    }
+    else if (count < 64)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    else
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }

@@ -1,4 +1,4 @@
-﻿#include "IAsyncChannelHandler.h"
+#include "IAsyncChannelHandler.h"
 
 IAsyncChannelHandler::IAsyncChannelHandler() = default;
 

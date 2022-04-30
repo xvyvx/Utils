@@ -1,4 +1,4 @@
-﻿#ifndef BLACKMAGICS_H
+#ifndef BLACKMAGICS_H
 #define BLACKMAGICS_H
 
 #include "../Common/CommonHdr.h"

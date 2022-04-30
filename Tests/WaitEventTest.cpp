@@ -1,29 +1,39 @@
+#include <atomic>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
+#include <boost/timer/timer.hpp>
 #include "Concurrent/WaitEvent.h"
 
-WaitEvent evt1;
+WaitEvent evt;
 
-WaitEvent evt2;
+std::atomic<bool> flag(true);
 
 BOOST_AUTO_TEST_SUITE(WaitEventTest)
 
 void WaitTestFunc()
 {
-    evt1.Wait();
-    boost::this_thread::sleep_for(boost::chrono::seconds(1));
-    evt2.Signal();
+    evt.Wait();
+    flag.store(false, std::memory_order_release);
+    while (!flag.load(std::memory_order_acquire))
+    {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+    }
+    evt.Signal();
 }
 
 BOOST_AUTO_TEST_CASE(GeneralTest)
 {
-    BOOST_TEST(evt1 == true);
-    BOOST_TEST(evt2 == true);
+    BOOST_TEST(evt == true);
     boost::thread t(&WaitTestFunc);
-    evt1.Signal();
-    bool result = evt2.TimedWait(500);
+    evt.Signal();
+    while (flag.load(std::memory_order_acquire))
+    {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+    }
+    bool result = evt.TimedWait(1999);
     BOOST_TEST(result == false);
-    evt2.Wait();
+    flag.store(true, std::memory_order_release);
+    evt.Wait();
     t.join();
 }
 

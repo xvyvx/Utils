@@ -1,4 +1,4 @@
-﻿#ifndef TCPLISTENERBASE_H
+#ifndef TCPLISTENERBASE_H
 #define TCPLISTENERBASE_H
 
 #include <set>
@@ -24,147 +24,147 @@
  */
 template
 <
-	typename ProtocolTraits, 
-	typename AcceptFunc,
-	AcceptFunc *AcceptFunction,
-	const char *LoggerName
+    typename ProtocolTraits, 
+    typename AcceptFunc,
+    AcceptFunc *AcceptFunction,
+    const char *LoggerName
 > 
 class TcpListenerBase : public std::enable_shared_from_this<TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>>
 {
 public:
 
-	/**
-	 * Defines an alias representing type of the base class.
-	 */
-	typedef std::enable_shared_from_this<TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>> BaseType;
+    /**
+     * Defines an alias representing type of the base class.
+     */
+    typedef std::enable_shared_from_this<TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>> BaseType;
 
-	/**
-	 * Defines an alias representing the pointer to self.
-	 */
-	typedef std::shared_ptr<TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>> ptr_t;
+    /**
+     * Defines an alias representing the pointer to self.
+     */
+    typedef std::shared_ptr<TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>> ptr_t;
 
-	/**
-	 * Gets the global instance.
-	 *
-	 * @return Global instance refernece.
-	 */
-	static TcpListenerBase& Instance();
+    /**
+     * Gets the global instance.
+     *
+     * @return Global instance refernece.
+     */
+    static TcpListenerBase& Instance();
 
-	/**
-	 * Destories the global instance.
-	 */
-	static void Destory();
+    /**
+     * Destories the global instance.
+     */
+    static void Destory();
 
-	/**
-	 * Copy constructor(deleted)
-	 */
-	TcpListenerBase(const TcpListenerBase&) = delete;
+    /**
+     * Copy constructor(deleted)
+     */
+    TcpListenerBase(const TcpListenerBase&) = delete;
 
-	/**
-	 * Move constructor(deleted)
-	 */
-	TcpListenerBase(TcpListenerBase&&) = delete;
+    /**
+     * Move constructor(deleted)
+     */
+    TcpListenerBase(TcpListenerBase&&) = delete;
 
-	/**
-	 * Destructor
-	 */
-	~TcpListenerBase();
+    /**
+     * Destructor
+     */
+    ~TcpListenerBase();
 
-	/**
-	 * Assignment operator(deleted)
-	 *
-	 * @return Equal to *this.
-	 */
-	TcpListenerBase& operator=(const TcpListenerBase&) = delete;
+    /**
+     * Assignment operator(deleted)
+     *
+     * @return Equal to *this.
+     */
+    TcpListenerBase& operator=(const TcpListenerBase&) = delete;
 
-	/**
-	 * Move assignment operator(deleted)
-	 */
-	TcpListenerBase&& operator=(TcpListenerBase&&) = delete;
+    /**
+     * Move assignment operator(deleted)
+     */
+    TcpListenerBase&& operator=(TcpListenerBase&&) = delete;
 
-	/**
-	 * Adds listen end points.
-	 *
-	 * @param localEndPoints The local end points.
-	 *
-	 * @return True if it succeeds, false if it fails.
-	 */
-	bool AddListenEndPoints(std::initializer_list<std::pair<typename ProtocolTraits::AddressType, us16>> localEndPoints);
+    /**
+     * Adds listen end points.
+     *
+     * @param localEndPoints The local end points.
+     *
+     * @return True if it succeeds, false if it fails.
+     */
+    bool AddListenEndPoints(std::initializer_list<std::pair<typename ProtocolTraits::AddressType, us16>> localEndPoints);
 
-	/**
-	 * Adds a listen end point
-	 *
-	 * @param localEndPoint The local end point.
-	 *
-	 * @return True if it succeeds, false if it fails.
-	 */
-	bool AddListenEndPoint(const boost::asio::ip::tcp::endpoint &localEndPoint);
+    /**
+     * Adds a listen end point
+     *
+     * @param localEndPoint The local end point.
+     *
+     * @return True if it succeeds, false if it fails.
+     */
+    bool AddListenEndPoint(const boost::asio::ip::tcp::endpoint &localEndPoint);
 
-	/**
-	 * Removes the listener end point described by localEndPoint
-	 *
-	 * @param localEndPoint The local end point.
-	 */
-	void RemoveListenerEndPoint(const boost::asio::ip::tcp::endpoint &localEndPoint);
+    /**
+     * Removes the listener end point described by localEndPoint
+     *
+     * @param localEndPoint The local end point.
+     */
+    void RemoveListenerEndPoint(const boost::asio::ip::tcp::endpoint &localEndPoint);
 
 protected:
 
-	/**
-	 * Default constructor
-	 */
-	TcpListenerBase();
+    /**
+     * Default constructor
+     */
+    TcpListenerBase();
 
 private:
-	static log4cplus::Logger log;   /**< The logger. */
+    static log4cplus::Logger log;   /**< The logger. */
 
-	static ptr_t instance;  /**< Global instance. */
+    static ptr_t instance;  /**< Global instance. */
 
-	/**
-	 * Begin a close operation.
-	 *
-	 * @return True if it succeeds, false if it fails.
-	 */
-	bool BeginClose();
+    /**
+     * Begin a close operation.
+     *
+     * @return True if it succeeds, false if it fails.
+     */
+    bool BeginClose();
 
-	/**
-	 * Adds listener end point implementation(thread unsafe).
-	 *
-	 * @param localEndPoint The local end point to be added.
-	 *
-	 * @return Iterator point to added end point when success,otherwise return a end iterator.
-	 */
-	std::set<std::shared_ptr<boost::asio::ip::tcp::acceptor>>::iterator AddListenerEndPointUnsafe(const boost::asio::ip::tcp::endpoint &localEndPoint);
+    /**
+     * Adds listener end point implementation(thread unsafe).
+     *
+     * @param localEndPoint The local end point to be added.
+     *
+     * @return Iterator point to added end point when success,otherwise return a end iterator.
+     */
+    std::set<std::shared_ptr<boost::asio::ip::tcp::acceptor>>::iterator AddListenerEndPointUnsafe(const boost::asio::ip::tcp::endpoint &localEndPoint);
 
-	/**
-	 * Begin an accept operation.
-	 *
-	 * @param listener Global listener instance.
-	 */
-	void BeginAccept(std::shared_ptr<boost::asio::ip::tcp::acceptor> listener);
+    /**
+     * Begin an accept operation.
+     *
+     * @param listener Global listener instance.
+     */
+    void BeginAccept(std::shared_ptr<boost::asio::ip::tcp::acceptor> listener);
 
-	/**
-	 * Internal end accept callback.
-	 *
-	 * @param sock The acceptted sock.
-	 * @param remoteEndPoint The remote end point.
-	 * @param listener Global listener instance.
-	 * @param error Accpet operation result.
-	 */
-	void EndAccept(std::shared_ptr<boost::asio::ip::tcp::socket> sock, std::shared_ptr<boost::asio::ip::tcp::endpoint> remoteEndPoint, std::shared_ptr<boost::asio::ip::tcp::acceptor> listener
-		, const boost::system::error_code& error);
+    /**
+     * Internal end accept callback.
+     *
+     * @param sock The acceptted sock.
+     * @param remoteEndPoint The remote end point.
+     * @param listener Global listener instance.
+     * @param error Accpet operation result.
+     */
+    void EndAccept(std::shared_ptr<boost::asio::ip::tcp::socket> sock, std::shared_ptr<boost::asio::ip::tcp::endpoint> remoteEndPoint, std::shared_ptr<boost::asio::ip::tcp::acceptor> listener
+        , const boost::system::error_code& error);
 
-	/**
-	 * Removes the listener end point implementation(thread unsafe)
-	 *
-	 * @param localEndPoint Local end point to be removed.
-	 */
-	void RemoveListenerEndPointUnsafe(const boost::asio::ip::tcp::endpoint &localEndPoint);
+    /**
+     * Removes the listener end point implementation(thread unsafe)
+     *
+     * @param localEndPoint Local end point to be removed.
+     */
+    void RemoveListenerEndPointUnsafe(const boost::asio::ip::tcp::endpoint &localEndPoint);
 
-	std::set<std::shared_ptr<boost::asio::ip::tcp::acceptor>> m_acceptors;  /**< Listeners. */
+    std::set<std::shared_ptr<boost::asio::ip::tcp::acceptor>> m_acceptors;  /**< Listeners. */
 
-	volatile bool m_stoped; /**< True if stoped. */
+    volatile bool m_stoped; /**< True if stoped. */
 
-	SpinLock<> m_lock;  /**< Internal lock used for thread safe. */
+    SpinLock<> m_lock;  /**< Internal lock used for thread safe. */
 };
 
 #endif /* TCPLISTENERBASE_H */

@@ -10,10 +10,10 @@ class SerialPortTraits
 {
 public:
 
-	/**
-	 * Defines an alias representing type of the basic stream.
-	 */
-	typedef boost::asio::serial_port StreamType;
+    /**
+     * Defines an alias representing type of the basic stream.
+     */
+    typedef boost::asio::serial_port StreamType;
 };
 
 #endif /* SERIALPORTTRAITS_H */

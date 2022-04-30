@@ -1,4 +1,4 @@
-﻿#ifndef TCPPASSIVECHANNELBASE_H
+#ifndef TCPPASSIVECHANNELBASE_H
 #define TCPPASSIVECHANNELBASE_H
 
 #include <boost/asio.hpp>
@@ -14,47 +14,47 @@ template<typename ProtocolTraits, const char *LoggerName> class TcpPassiveChanne
 {
 public:
 
-	/**
-	 * Defines an alias representing type of the base class.
-	 */
-	typedef StreamChannelBase<ProtocolTraits, LoggerName> BaseType;
+    /**
+     * Defines an alias representing type of the base class.
+     */
+    typedef StreamChannelBase<ProtocolTraits, LoggerName> BaseType;
 
-	/**
-	 * Constructor
-	 *
-	 * @param [in,out] stream Basic stream object.
-	 * @param remoteEndPoint Remote end point connectted from.
-	 */
-	TcpPassiveChannelBase(std::shared_ptr<typename ProtocolTraits::StreamType> &stream, const boost::asio::ip::tcp::endpoint &remoteEndPoint);
+    /**
+     * Constructor
+     *
+     * @param [in,out] stream Basic stream object.
+     * @param remoteEndPoint Remote end point connectted from.
+     */
+    TcpPassiveChannelBase(std::shared_ptr<typename ProtocolTraits::StreamType> &stream, const boost::asio::ip::tcp::endpoint &remoteEndPoint);
 
-	/**
-	 * Destructor
-	 */
-	virtual ~TcpPassiveChannelBase() override;
+    /**
+     * Destructor
+     */
+    virtual ~TcpPassiveChannelBase() override;
 
-	/**
-	 * {@inheritDoc}
-	 */
-	virtual void AsyncOpen(const IAsyncChannelHandler::ptr_t &handler) override;
+    /**
+     * {@inheritDoc}
+     */
+    virtual void AsyncOpen(const IAsyncChannelHandler::ptr_t &handler) override;
 
-	/**
-	 * {@inheritDoc}
-	 */
-	virtual void AsyncClose(const IAsyncChannelHandler::ptr_t &handler) override;
+    /**
+     * {@inheritDoc}
+     */
+    virtual void AsyncClose(const IAsyncChannelHandler::ptr_t &handler) override;
 
 private:
 
-	/**
-	 * Closes this channel.
-	 *
-	 * @param [out] shutdownErr The shutdown error.
-	 * @param [out] closeErr The close error.
-	 */
-	void Close(boost::system::error_code &shutdownErr, boost::system::error_code &closeErr);
+    /**
+     * Closes this channel.
+     *
+     * @param [out] shutdownErr The shutdown error.
+     * @param [out] closeErr The close error.
+     */
+    void Close(boost::system::error_code &shutdownErr, boost::system::error_code &closeErr);
 
-	boost::asio::ip::tcp::endpoint m_remoteEndPoint;	/**< The remote end point connectted from. */
+    boost::asio::ip::tcp::endpoint m_remoteEndPoint;	/**< The remote end point connectted from. */
 
-	volatile bool m_closed; /**< True if closed. */
+    volatile bool m_closed; /**< True if closed. */
 };
 
 #endif /* TCPPASSIVECHANNELBASE_H */

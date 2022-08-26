@@ -21,7 +21,7 @@ typedef TimerCacheBase<boost::asio::deadline_timer, DeadlineTimerCacheFactory, D
 
 extern template class UTILS_DECL_API ObjectPoolBase
 <
-    size_t
+    TimerKey
     , boost::asio::deadline_timer
     , TimerElementTrait<boost::asio::deadline_timer>
     , TimerCacheBase<boost::asio::deadline_timer, DeadlineTimerCacheFactory, DeadlineTimerCacheLoggerName>
@@ -32,7 +32,7 @@ extern template class UTILS_DECL_API ObjectPoolBase
 
 extern template class UTILS_DECL_API ObjectPoolElemDeleter
 <
-    size_t
+    TimerKey
     , boost::asio::deadline_timer
     , TimerElementTrait<boost::asio::deadline_timer>
     , TimerCacheBase<boost::asio::deadline_timer, DeadlineTimerCacheFactory, DeadlineTimerCacheLoggerName>

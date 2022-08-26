@@ -21,7 +21,7 @@ typedef TimerCacheBase<boost::asio::steady_timer, SteadyTimerCacheFactory, Stead
 
 extern template class UTILS_DECL_API ObjectPoolBase
 <
-    size_t
+    TimerKey
     , boost::asio::steady_timer
     , TimerElementTrait<boost::asio::steady_timer>
     , TimerCacheBase<boost::asio::steady_timer, SteadyTimerCacheFactory, SteadyTimerCacheLoggerName>
@@ -32,7 +32,7 @@ extern template class UTILS_DECL_API ObjectPoolBase
 
 extern template class UTILS_DECL_API ObjectPoolElemDeleter
 <
-    size_t
+    TimerKey
     , boost::asio::steady_timer
     , TimerElementTrait<boost::asio::steady_timer>
     , TimerCacheBase<boost::asio::steady_timer, SteadyTimerCacheFactory, SteadyTimerCacheLoggerName>

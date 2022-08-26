@@ -87,7 +87,7 @@ jobs:
         run: |
             mkdir $GITHUB_WORKSPACE/build && cd $GITHUB_WORKSPACE/build
             cmake -DNativeToolchainVersion=${{ matrix.toolset-version }} \
-              -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/CMake/${{ matrix.toolset }}-x86_64-linux-gnu.cmake" \
+              -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/CMake/Toolchain/${{ matrix.toolset }}-x86_64-linux-gnu.cmake" \
               -Dotl_INCLUDEDIR=$GITHUB_WORKSPACE/3rd -Dotl_VERSION_MAJOR=4 \
               -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/3rd/boost_1_78_0/stage" -DBoost_USE_STATIC_LIBS=ON \
               -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \

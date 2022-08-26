@@ -58,7 +58,7 @@ public:
 template <typename T, typename FactoryType, const char *LoggerName> class TimerCacheBase
     : public ObjectPoolBase
     <
-        size_t
+        TimerKey
         , T
         , TimerElementTrait<T>
         , TimerCacheBase<T, FactoryType, LoggerName>
@@ -68,7 +68,7 @@ template <typename T, typename FactoryType, const char *LoggerName> class TimerC
     >
 {
 protected:
-    typedef ObjectPoolBase<size_t, T, TimerElementTrait<T>, TimerCacheBase<T, FactoryType, LoggerName>, FactoryType
+    typedef ObjectPoolBase<TimerKey, T, TimerElementTrait<T>, TimerCacheBase<T, FactoryType, LoggerName>, FactoryType
         , TimerCacheBaseClearFunc<T>, LoggerName> BaseType;
 
     friend BaseType;

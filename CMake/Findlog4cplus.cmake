@@ -1,4 +1,4 @@
-include(${CMAKE_CURRENT_LIST_DIR}/LogUtils.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/Common/LogUtils.cmake)
 
 find_path(log4cplus_INCLUDE_DIR NAMES log4cplus/logger.h log4cplus/configurator.h log4cplus/loggingmacros.h PATHS ${log4cplus_INCLUDEDIR})
 

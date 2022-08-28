@@ -169,8 +169,7 @@ jobs:
             cmake -G "Visual Studio 17 2022" -A "${{ matrix.arch }}" -T "${{ matrix.toolset }}" `
               -DCMAKE_CONFIGURATION_TYPES=${{ matrix.configuration }} `
               -Dotl_INCLUDEDIR="$env:GITHUB_WORKSPACE\3rd" -Dotl_VERSION_MAJOR=4 `
-              -DCMAKE_PREFIX_PATH="$env:GITHUB_WORKSPACE\3rd\boost_1_78_0\stage" -DBoost_USE_STATIC_LIBS=ON `
-              -DCMAKE_PREFIX_PATH="$env:GITHUB_WORKSPACE\3rd\log4cplus-REL_1_2_0\build\install" `
+              -DCMAKE_PREFIX_PATH="$env:GITHUB_WORKSPACE\3rd\boost_1_78_0\stage;$env:GITHUB_WORKSPACE\3rd\log4cplus-REL_1_2_0\build\install" -DBoost_USE_STATIC_LIBS=ON `
               -DCMAKE_C_FLAGS="/execution-charset:utf-8" `
               -DCMAKE_CXX_FLAGS="/execution-charset:utf-8 /EHsc" ..
             cmake --build . --config ${{ matrix.configuration }}

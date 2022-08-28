@@ -150,7 +150,7 @@ jobs:
             cmake -G "Visual Studio 17 2022" -A "${{ matrix.arch }}" -T "${{ matrix.toolset }}" `
               -DCMAKE_CONFIGURATION_TYPES=${{ matrix.configuration }} -D_WIN32_WINNT=0x0601 -DUNICODE=OFF `
               -DLOG4CPLUS_BUILD_TESTING=OFF -DLOG4CPLUS_BUILD_LOGGINGSERVER=OFF `
-              -DCMAKE_INSTALL_PREFIX=$env:GITHUB_WORKSPACE\3rd\log4cplus-REL_1_2_0\build\install ..
+              -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\3rd\log4cplus-REL_1_2_0\build\install" ..
             cmake --build . --target install --config ${{ matrix.configuration }}
       - name: Install dependencies(otl)
         shell: powershell

@@ -1,4 +1,19 @@
-include_guard(DIRECTORY)
+include_guard(GLOBAL)
+
+function(FindNativeToolChainProg progName)
+    set(progRealName ${progName})
+    if(NativeToolchainTriplet)
+        set(progRealName ${NativeToolchainTriplet}-${progName})
+    endif()
+    find_program(toolchainNativeProgPath_${progName} ${progRealName} ONLY_CMAKE_FIND_ROOT_PATH)
+    if(NOT toolchainNativeProgPath_${progName})
+        message(FATAL_ERROR "Can't find toolchain programe(${progRealName}),\
+            please set CMAKE_FIND_ROOT_PATH variable correctly.")
+    endif()
+    add_executable("Toolchain::${progName}" IMPORTED GLOBAL)
+    set_target_properties("Toolchain::${progName}" PROPERTIES IMPORTED_LOCATION
+        ${toolchainNativeProgPath_${progName}})
+endfunction()
 
 macro(CheckGNUStyleToolchain)
     if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
@@ -15,11 +30,15 @@ function(EnableGNUStyleStrip)
         set(dbgOneValArgNames "TARGET")
         set(dbgMultiValArgNames "")
         cmake_parse_arguments(dbg "${dbgOptionalArgNames}" "${dbgOneValArgNames}" "${dbgMultiValArgNames}" ${ARGN})
-        add_custom_command(TARGET ${dbg_TARGET} POST_BUILD
-            COMMAND Toolchain::objcopy --only-keep-debug ./$<TARGET_FILE_NAME:${dbg_TARGET}> ./$<TARGET_FILE_NAME:${dbg_TARGET}>.debug
-            COMMAND Toolchain::strip --strip-debug --strip-unneeded ./$<TARGET_FILE_NAME:${dbg_TARGET}>
-            COMMAND Toolchain::objcopy --add-gnu-debuglink=$<TARGET_FILE_NAME:${dbg_TARGET}>.debug ./$<TARGET_FILE_NAME:${dbg_TARGET}>
-            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+        if(TARGET ${dbg_TARGET})
+            add_custom_command(TARGET ${dbg_TARGET} POST_BUILD
+                COMMAND Toolchain::objcopy --only-keep-debug ./$<TARGET_FILE_NAME:${dbg_TARGET}> ./$<TARGET_FILE_NAME:${dbg_TARGET}>.debug
+                COMMAND Toolchain::strip --strip-debug --strip-unneeded ./$<TARGET_FILE_NAME:${dbg_TARGET}>
+                COMMAND Toolchain::objcopy --add-gnu-debuglink=$<TARGET_FILE_NAME:${dbg_TARGET}>.debug ./$<TARGET_FILE_NAME:${dbg_TARGET}>
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+        else()
+            message(FATAL_ERROR "EnableGNUStyleStrip must be called with a target.")
+        endif()
     endif()
 endfunction()
 

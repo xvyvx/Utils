@@ -16,7 +16,7 @@ void SteadyTimerCacheFactory::FreeObj(boost::asio::steady_timer *obj)
 
 template class UTILS_DEF_API ObjectPoolBase
 <
-    size_t
+    TimerKey
     , boost::asio::steady_timer
     , TimerElementTrait<boost::asio::steady_timer>
     , TimerCacheBase<boost::asio::steady_timer, SteadyTimerCacheFactory, SteadyTimerCacheLoggerName>
@@ -27,7 +27,7 @@ template class UTILS_DEF_API ObjectPoolBase
 
 template class UTILS_DEF_API ObjectPoolElemDeleter
 <
-    size_t
+    TimerKey
     , boost::asio::steady_timer
     , TimerElementTrait<boost::asio::steady_timer>
     , TimerCacheBase<boost::asio::steady_timer, SteadyTimerCacheFactory, SteadyTimerCacheLoggerName>

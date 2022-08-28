@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6.0)
+cmake_minimum_required(VERSION 3.17.0)
 
 project(Utils)
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
@@ -9,7 +9,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
 
-include(${PROJECT_SOURCE_DIR}/CMake/BuildUtils.cmake)
+include(${PROJECT_SOURCE_DIR}/CMake/BuildUtils/BuildHelper.cmake)
 
 option(ENABLE_ODBC_DATABASE_UTILS "Enable or disable odbc database utilities(ON/OFF),default is OFF" OFF)
 option(ENABLE_OCI_DATABASE_UTILS "Enable or disable oci database utilities(ON/OFF),default is OFF" OFF)

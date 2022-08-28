@@ -1,4 +1,4 @@
-include(${CMAKE_CURRENT_LIST_DIR}/LogUtils.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/Common/LogHelper.cmake)
 if(otl_VERSION_MAJOR)
     set(OtlFileName otlv${otl_VERSION_MAJOR}.h)
 else()

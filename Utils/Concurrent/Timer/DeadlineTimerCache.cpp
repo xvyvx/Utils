@@ -16,7 +16,7 @@ void DeadlineTimerCacheFactory::FreeObj(boost::asio::deadline_timer *obj)
 
 template class UTILS_DEF_API ObjectPoolBase
 <
-    size_t
+    TimerKey
     , boost::asio::deadline_timer
     , TimerElementTrait<boost::asio::deadline_timer>
     , TimerCacheBase<boost::asio::deadline_timer, DeadlineTimerCacheFactory, DeadlineTimerCacheLoggerName>
@@ -27,7 +27,7 @@ template class UTILS_DEF_API ObjectPoolBase
 
 template class UTILS_DEF_API ObjectPoolElemDeleter
 <
-    size_t
+    TimerKey
     , boost::asio::deadline_timer
     , TimerElementTrait<boost::asio::deadline_timer>
     , TimerCacheBase<boost::asio::deadline_timer, DeadlineTimerCacheFactory, DeadlineTimerCacheLoggerName>

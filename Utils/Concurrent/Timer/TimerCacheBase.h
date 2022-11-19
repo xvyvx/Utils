@@ -99,7 +99,7 @@ private:
         {
             LOG4CPLUS_ERROR_FMT(BaseType::Logger(), "等待队列任务延时错误（%s）。", err.message().c_str());
         }
-        QueueThreadPoolWorkItem(std::forward<FuncType>(func), err, std::forward<Args>(args)...);
+        func(err, std::forward<Args>(args)...);
     }
 
 public:

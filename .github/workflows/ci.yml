@@ -32,7 +32,7 @@ jobs:
             configuration: Release
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies(Others)
         run: |
             sudo apt-get update -qq
@@ -44,9 +44,9 @@ jobs:
             wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
             sudo -E apt-add-repository -y "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
             sudo apt-get update -qq
-            sudo apt-get -qq install -y clang-14 lld-14 libc++-14-dev libc++abi-14-dev libunwind-14-dev llvm
-            echo "::set-output name=clang_compile_flags::-stdlib=libc++"
-            echo "::set-output name=clang_link_flags::-fuse-ld=lld --rtlib=compiler-rt -lunwind"
+            sudo apt-get -qq install -y clang-14 libclang-rt-14-dev lld-14 libc++-14-dev libc++abi-14-dev libunwind-14-dev llvm
+            echo "clang_compile_flags=-stdlib=libc++" >> $GITHUB_OUTPUT
+            echo "clang_link_flags=-fuse-ld=lld --rtlib=compiler-rt -lunwind" >> $GITHUB_OUTPUT
       - name: Install dependencies(gcc specific)
         id: gcc_specific_ctx
         if: ${{ matrix.toolset-c == 'gcc' && matrix.configuration == 'Debug' }}
@@ -106,7 +106,7 @@ jobs:
           lcov --extract all_cov.info '*/Utils/Utils/Utils/*' -o ./lcov.info
       - name: Code coverage data upload
         if: ${{ matrix.toolset-c == 'gcc' && matrix.configuration == 'Debug' && success() }}
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ${{ github.workspace }}/build/lcov.info
@@ -122,7 +122,7 @@ jobs:
         arch: [Win32, x64]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies(Boost)
         shell: powershell
         run: |

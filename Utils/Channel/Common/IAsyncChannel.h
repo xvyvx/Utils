@@ -49,13 +49,16 @@ public:
      * Start an asynchronous write operation on the communication channel,all operation error will reportted in the callback handler.
      *
      * @param buf The write buf array.
+     * @param sendOffset Offset of buffer to be writen.
+     * @param sendLen Byte count to be writen.
      * @param handler The handler to be called when the write operation completes.
      * @param [in,out] ctx (Optional) user defined context data.
      * 
      * @note The write operation will write all of the requested number of bytes(or an error occurred) before call the handler. This function support
      * multiple calls before previous operation finished(following request will be queued).
      */
-    virtual void AsyncWrite(const std::shared_ptr<LinearBuffer> &buf, const IAsyncChannelHandler::ptr_t &handler, void *ctx = nullptr) = 0;
+    virtual void AsyncWrite(const std::shared_ptr<LinearBuffer> &buf, size_t sendOffset, size_t sendLen
+        , const IAsyncChannelHandler::ptr_t &handler, void *ctx = nullptr) = 0;
 
     /**
      * Start an asynchronous close operation on the communication channel,all operation error will reportted in the callback handler.

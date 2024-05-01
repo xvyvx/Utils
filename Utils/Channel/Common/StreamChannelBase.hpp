@@ -2,6 +2,7 @@
 #define STREAMCHANNELBASEIMPL_H
 
 #include "StreamChannelBase.h"
+#include <boost/asio.hpp>
 
 template<typename StreamTraits, const char *LoggerName> log4cplus::Logger StreamChannelBase<StreamTraits, LoggerName>::log 
     = log4cplus::Logger::getInstance(LoggerName);
@@ -26,19 +27,19 @@ template<typename StreamTraits, const char *LoggerName> void StreamChannelBase<S
 }
 
 template<typename StreamTraits, const char *LoggerName> void StreamChannelBase<StreamTraits, LoggerName>::AsyncWrite(const std::shared_ptr<LinearBuffer> &buf
-    , const IAsyncChannelHandler::ptr_t &handler, void *ctx)
+    , size_t sendOffset, size_t sendLen, const IAsyncChannelHandler::ptr_t &handler, void *ctx)
 {
     SpinLock<>::ScopeLock lock(m_lock);
     if (m_lastWrReq)
     {
-        m_lastWrReq->m_next = std::unique_ptr<WrReq>(new WrReq{ handler,buf,ctx,nullptr });
+        m_lastWrReq->m_next = std::unique_ptr<WrReq>(new WrReq{ handler, buf, sendOffset, sendLen, ctx, nullptr });
         m_lastWrReq = m_lastWrReq->m_next.get();
     }
     else
     {
-        std::unique_ptr<WrReq> req(new WrReq{ handler,buf,ctx,nullptr });
+        std::unique_ptr<WrReq> req(new WrReq{ handler, buf, sendOffset, sendLen, ctx, nullptr });
         m_lastWrReq = req.get();
-        boost::asio::async_write(*m_stream, boost::asio::buffer(buf->data(), buf->size()), std::bind(&StreamChannelBase<StreamTraits, LoggerName>::EndWrite
+        boost::asio::async_write(*m_stream, boost::asio::buffer(buf->data() + sendOffset, sendLen), std::bind(&StreamChannelBase<StreamTraits, LoggerName>::EndWrite
             , StreamChannelBase<StreamTraits, LoggerName>::shared_from_this(), std::move(req), std::placeholders::_1, std::placeholders::_2));
     }
 }
@@ -50,8 +51,8 @@ template<typename StreamTraits, const char *LoggerName> void StreamChannelBase<S
         SpinLock<>::ScopeLock lock(m_lock);
         if (wrReq->m_next)
         {
-            us8* buffer = wrReq->m_next->m_buf->data();
-            size_t bufferSize = wrReq->m_next->m_buf->size();
+            us8* buffer = wrReq->m_next->m_buf->data() + wrReq->m_next->m_sendOffset;
+            size_t bufferSize = wrReq->m_next->m_sendLen;
             boost::asio::async_write(*m_stream, boost::asio::buffer(buffer, bufferSize)
                 , std::bind(&StreamChannelBase<StreamTraits, LoggerName>::EndWrite, StreamChannelBase<StreamTraits, LoggerName>::shared_from_this(), std::move(wrReq->m_next)
                 , std::placeholders::_1, std::placeholders::_2));

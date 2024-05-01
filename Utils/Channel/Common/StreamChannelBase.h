@@ -31,7 +31,8 @@ public:
     /**
      * {@inheritDoc}
      */
-    virtual void AsyncWrite(const std::shared_ptr<LinearBuffer> &buf, const IAsyncChannelHandler::ptr_t &handler, void *ctx) override;
+    virtual void AsyncWrite(const std::shared_ptr<LinearBuffer> &buf, size_t sendOffset, size_t sendLen
+        , const IAsyncChannelHandler::ptr_t &handler, void *ctx) override;
 
 protected:
     std::shared_ptr<typename StreamTraits::StreamType> m_stream;	/**< Pointer of underlying stream implementation. */
@@ -49,6 +50,10 @@ private:
         IAsyncChannelHandler::ptr_t m_handler;  /**< Request's callback handler. */
 
         std::shared_ptr<LinearBuffer> m_buf;	/**< Request's write buffer. */
+
+        size_t m_sendOffset;	/**< Offset of buffer to be writen. */
+
+        size_t m_sendLen;	/**< Byte count to be writen. */
 
         void *m_ctx;	/**< Request's user defined context data. */
 

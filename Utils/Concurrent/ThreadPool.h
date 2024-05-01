@@ -198,13 +198,11 @@ template<typename Function, typename... Args> void asio_handler_invoke(Function 
  * Queue a work item to thread pool.
  *
  * @tparam T Work function type.
- * @tparam Args Work function arguments.
  * @param item Work function.
- * @param args Variable arguments providing work function arguments.
  */
-template<typename T, typename... Args> void QueueThreadPoolWorkItem(T &&item, Args&&... args)
+template<typename T> void QueueThreadPoolWorkItem(T &&item)
 {
-    boost::asio::post(ThreadPool::Instance().Context(), std::bind(std::forward<T>(item), std::forward<Args>(args)...));
+    boost::asio::post(ThreadPool::Instance().Context(), std::forward<T>(item));
 }
 
 #if defined(_MSC_VER)

@@ -267,11 +267,20 @@ public:
     }
 
     /**
+     * Get content space of this buffer.
+     *
+     * @param [out] bufs Content spaces.
+     *
+     * @return The size of content space array.
+     */
+    size_t content_buffers(BufDescriptor bufs[2]);
+
+    /**
      * Get free space of this buffer.
      *
      * @param [out] bufs Free spaces.
      *
-     * @return A The size of free space array.
+     * @return The size of free space array.
      */
     size_t free_buffers(BufDescriptor bufs[2]);
 

@@ -165,6 +165,30 @@ void CircularBuffer::pop_front(size_t popSize)
     }
 }
 
+size_t CircularBuffer::content_buffers(BufDescriptor bufs[2])
+{
+	assert(m_buf);
+	us8 *end = m_buf + m_capacity;
+    if(m_subSize == 0)
+    {
+        return 0;
+    }
+	else if (m_beg + m_subSize > end)
+	{
+		bufs[0].m_beg = m_beg;
+		bufs[0].m_size = end - m_beg;
+		bufs[1].m_beg = m_buf;
+		bufs[1].m_size = m_subSize - bufs[0].m_size;
+		return 2;
+	}
+	else
+	{
+		bufs[0].m_beg = m_beg;
+		bufs[0].m_size = m_subSize;
+		return 1;
+	}
+}
+
 size_t CircularBuffer::free_buffers(BufDescriptor bufs[2])
 {
     assert(m_buf);

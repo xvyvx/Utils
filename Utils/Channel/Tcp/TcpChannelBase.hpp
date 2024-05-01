@@ -32,8 +32,7 @@ TcpChannelBase<ProtocolTraits, LoggerName>::~TcpChannelBase()
 }
 
 template <typename ProtocolTraits, const char *LoggerName>
-void TcpChannelBase<ProtocolTraits, LoggerName>::AsyncOpen(
-    const IAsyncChannelHandler::ptr_t &handler)
+void TcpChannelBase<ProtocolTraits, LoggerName>::AsyncOpen(const IAsyncChannelHandler::ptr_t &handler)
 {
     SpinLock<>::ScopeLock lock(BaseType::m_lock);
     if (!BaseType::m_stream->is_open())
@@ -42,7 +41,7 @@ void TcpChannelBase<ProtocolTraits, LoggerName>::AsyncOpen(
         Open(err);
         if (err)
         {
-            QueueThreadPoolWorkItem(&IAsyncChannelHandler::EndOpen, handler, err);
+            QueueThreadPoolWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler, err));
         }
         else
         {
@@ -62,7 +61,8 @@ void TcpChannelBase<ProtocolTraits, LoggerName>::AsyncClose(
     SpinLock<>::ScopeLock lock(BaseType::m_lock);
     boost::system::error_code shutdownErr, closeErr;
     Close(shutdownErr, closeErr);
-    QueueThreadPoolWorkItem(&IAsyncChannelHandler::EndClose, handler, shutdownErr ? shutdownErr : closeErr);
+    QueueThreadPoolWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler
+        , shutdownErr ? shutdownErr : closeErr));
 }
 
 template <typename ProtocolTraits, const char *LoggerName>

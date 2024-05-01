@@ -67,7 +67,7 @@ public:
             {
                 std::shared_ptr<LinearBuffer> buf(new LinearBuffer(512));
                 buf->assign(10, 10);
-                m_channel->AsyncWrite(buf, shared_from_this());
+                m_channel->AsyncWrite(buf, 0, buf->size(), shared_from_this());
             }
             BufDescriptor bufs[2];
             size_t bufSize = m_readBuf->free_buffers(bufs);
@@ -167,7 +167,7 @@ public:
                 {
                     std::shared_ptr<LinearBuffer> buf(new LinearBuffer(512));
                     buf->assign(m_readBuf->size(), 10);
-                    m_channel->AsyncWrite(buf, shared_from_this());
+                    m_channel->AsyncWrite(buf, 0, buf->size(), shared_from_this());
                 }
                 else
                 {

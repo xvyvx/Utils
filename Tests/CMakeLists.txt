@@ -1,14 +1,16 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/BuildUtils/UnitTestHelper.cmake)
 
-AddExecutableTarget(UtilsTest SRC LinearBufferTest.cpp CircularBufferTest.cpp BufferCacheTest.cpp TlsTest.cpp
-    TcpChannelTest.cpp SerialportChannelTest.cpp TimerCacheTest.cpp PathHelperTest.cpp BinaryHelperTest.cpp
-    DiagnosticsTest.cpp ThreadPoolTest.cpp BlackMagicsTest.cpp WaitEventTest.cpp
+AddExecutableTarget(UtilsTest SRC TestStub.cpp LinearBufferTest.cpp CircularBufferTest.cpp BufferCacheTest.cpp
+    TlsTest.cpp TcpChannelTest.cpp SerialportChannelTest.cpp TimerCacheTest.cpp PathHelperTest.cpp
+    BinaryHelperTest.cpp DiagnosticsTest.cpp ThreadPoolTest.cpp BlackMagicsTest.cpp WaitEventTest.cpp 
+    UnixSignalHelperTest.cpp
     PRIVATE_INC ${CMAKE_CURRENT_SOURCE_DIR}/../Utils
     DEPS Boost::unit_test_framework Boost::timer Utils)
 
 AddTestCaseToTarget(UtilsTest TESTCASE CircularBufferCacheTest FILTER BufferCacheTest/CircularBufferCacheTest
     TESTCASE LinearBufferCacheTest FILTER BufferCacheTest/LinearBufferCacheTest
-    TESTCASE LinearBufferCacheHelperTest FILTER BufferCacheTest/LinearBufferCacheHelperTest
+    TESTCASE LinearBufferCacheVectorTest FILTER BufferCacheTest/LinearBufferCacheVectorTest
+    TESTCASE LinearBufferCacheNoTrivialWrapperTest FILTER BufferCacheTest/LinearBufferCacheNoTrivialWrapperTest
     TESTCASE CircularBufferGeneralTest FILTER CircularBufferTest/GeneralTest
     TESTCASE CircularBufferIteratorTest FILTER CircularBufferTest/IteratorTest
     TESTCASE CircularBufferCopyCtrlTest FILTER CircularBufferTest/CopyCtrlTest
@@ -26,4 +28,5 @@ AddTestCaseToTarget(UtilsTest TESTCASE CircularBufferCacheTest FILTER BufferCach
     TESTCASE DiagnosticsTest FILTER DiagnosticsTest/GetCPUUsageTest
     TESTCASE ThreadPoolTest FILTER ThreadPoolTest/GeneralTest
     TESTCASE BlackMagicsTest FILTER BlackMagicsTest/GeneralTest
-    TESTCASE WaitEventTest FILTER WaitEventTest/GeneralTest)
+    TESTCASE WaitEventTest FILTER WaitEventTest/GeneralTest
+    TESTCASE UnixSignalHelperDiscardChildInfoTest FILTER UnixSignalHelperTest/DiscardChildInfoTest COND UNIX)

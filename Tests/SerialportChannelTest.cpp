@@ -31,7 +31,7 @@ public:
         BOOST_TEST(!err, "Open port1 failed,message:" << err.message());
         GlobalSerialPortWaitEvent.Wait();
         m_sendBuf->assign({ 1,2,3,4,5,6 });
-        m_channel->AsyncWrite(m_sendBuf, shared_from_this());
+        m_channel->AsyncWrite(m_sendBuf, 0, m_sendBuf->size(), shared_from_this());
         BufDescriptor readBuf = { m_readBuf,6 };
         m_channel->AsyncReadSome(&readBuf, 1, shared_from_this());
         GlobalSerialPortWaitEvent.Signal();
@@ -85,7 +85,7 @@ public:
         }
         GlobalSerialPortWaitEvent.Wait();
         m_sendBuf->assign({ 1,2,3,4,5,6 });
-        m_channel->AsyncWrite(m_sendBuf, shared_from_this());
+        m_channel->AsyncWrite(m_sendBuf, 0, m_sendBuf->size(), shared_from_this());
     }
 
     virtual void EndWrite(const boost::system::error_code &err, std::size_t bytesTransferred, void *ctx) override

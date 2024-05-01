@@ -21,6 +21,7 @@
 #include "IProgressReporter.h"
 #include "SystemdProgressReporter.h"
 #include "Signal/SignalDispatcher.hpp"
+#include "Signal/UnixSignalHelper.h"
 #include "../Common/PathHelper.h"
 #include "../Log/Log4cplusCustomInc.h"
 
@@ -144,14 +145,15 @@ private:
     enum SysVDaemonIniResult
     {
         SysVDaemonIniResult_DaemonIniSuccessful = 0,	/**<Constant representing the SysV daemon initialize successful */
+        SysVDaemonIniResult_Successful = 0, /**< Constant representing the parent process receive child successful notify */
         SysVDaemonIniResult_FirstChildSuccessful,   /**< Constant representing the first child initialize successful option */
-        SysVDaemonIniResult_Successful, /**< Constant representing the parent process receive child successful notify */
         SysVDaemonIniResult_AlreadyExec,	/**< Constant representing the daemon process already execute */
         SysVDaemonIniResult_OpenPIDFileFailed,  /**< Constant representing the parent process open PID file failed */
         SysVDaemonIniResult_OpenIPCFailed,  /**< Constant representing open ipc failed */
         SysVDaemonIniResult_FirstForkFailed,	/**< Constant representing first fork call failed */
         SysVDaemonIniResult_ParentReadPipeFailed,   /**< Constant representing the parent process read pipe failed */
         SysVDaemonIniResult_SetsidFailed,   /**< Constant representing setsid call failed */
+        SysVDaemonIniResult_SetChildStatusInfoDiscardFailed, /**< Constant representing set discard child status info failed */
         SysVDaemonIniResult_SecondForkFailed,   /**< Constant representing second fork call failed */
         SysVDaemonIniResult_DaemonOpenNullFileFailed,   /**< Constant representing the daemon process open null file descriptor failed */
         SysVDaemonIniResult_DaemonRedirectFailed,	/**< Constant representing the daemon process redirect stdin,stdout,stderr failed */
@@ -817,7 +819,7 @@ template<typename T, T* Proc> int ApplicationBase<T, Proc>::SysVDaemonInitialize
         pidfile_close(m_pidFile);
         m_pidFile = nullptr;
         int exitStatus;
-        wait(&exitStatus);
+        waitpid(result, &exitStatus, 0);
         us8 childResult = 0;
         ssize_t readBytes = read(pipeDesc[0], &childResult, 1);
         close(pipeDesc[0]);
@@ -839,6 +841,12 @@ template<typename T, T* Proc> int ApplicationBase<T, Proc>::SysVDaemonChildIniti
         WriteNotifyPipeMsg(writePipe, SysVDaemonIniResult_SetsidFailed);
         close(writePipe);
         return SysVDaemonIniResult_SetsidFailed;
+    }
+    if (!UnixSignalHelper::DiscardChildProcessExitInfo())
+    {
+        WriteNotifyPipeMsg(writePipe, SysVDaemonIniResult_SetChildStatusInfoDiscardFailed);
+        close(writePipe);
+        return SysVDaemonIniResult_SetChildStatusInfoDiscardFailed;
     }
     result = fork();
     if (result == -1)

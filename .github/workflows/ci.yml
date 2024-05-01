@@ -106,7 +106,7 @@ jobs:
           lcov --extract all_cov.info '*/Utils/Utils/Utils/*' -o ./lcov.info
       - name: Code coverage data upload
         if: ${{ matrix.toolset-c == 'gcc' && matrix.configuration == 'Debug' && success() }}
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ${{ github.workspace }}/build/lcov.info

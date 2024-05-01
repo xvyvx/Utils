@@ -31,6 +31,9 @@ BOOST_FIXTURE_TEST_CASE(GeneralTest, CircularBufferGeneralTestFixture)
     BufDescriptor bufs[2];
     size_t bufSize = buf.free_buffers(bufs);
     BOOST_TEST(bufSize == 1);
+    BufDescriptor contentBufs[2];
+    size_t contentBufSize = buf.content_buffers(contentBufs);
+    BOOST_TEST(contentBufSize == 0);
 
     for (size_t i = 0; i < bufs[0].m_size; ++i)
     {
@@ -43,12 +46,19 @@ BOOST_FIXTURE_TEST_CASE(GeneralTest, CircularBufferGeneralTestFixture)
     bufSize = buf.free_buffers(bufs);
     BOOST_TEST(bufSize == 1);
     BOOST_TEST(bufs[0].m_size == 128);
+    contentBufSize = buf.content_buffers(contentBufs);
+    BOOST_TEST(contentBufSize == 2);
+    BOOST_TEST(contentBufs[0].m_size == 256);
+    BOOST_TEST(contentBufs[1].m_size == 128);
     buf.pop_front(257);
     bufSize = buf.free_buffers(bufs);
     BOOST_TEST(bufSize == 2);
     BOOST_TEST(bufs[0].m_size == 384);
     BOOST_TEST(bufs[1].m_size == 1);
     BOOST_TEST((buf == m_bufContent), boost::test_tools::per_element());
+    contentBufSize = buf.content_buffers(contentBufs);
+    BOOST_TEST(contentBufSize == 1);
+    BOOST_TEST(contentBufs[0].m_size == 127);
     buf.reserve(513);
     BOOST_TEST((buf == m_bufContent), boost::test_tools::per_element());
     buf.pop_front(126);

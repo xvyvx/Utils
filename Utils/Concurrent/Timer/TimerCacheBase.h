@@ -83,24 +83,61 @@ protected:
 
 private:
     /**
-     * @brief Timer callback entry
+     * @brief Timeout handler wrapper that wraps timeout callback functor.
      * 
-     * @tparam FuncType Task function type
-     * @tparam Args Task function argument types
-     * @param err Timer error code
-     * @param timer timer
-     * @param func Task function object
-     * @param args Task function arguments
+     * @tparam HandlerType Timeout callback functor type.
      */
-    template<typename FuncType, typename... Args> static void OnThreadPoolWorkItemDelayTimer(const boost::system::error_code &err
-        , typename BaseType::ptr_t &timer, FuncType &func, Args&...args)
+    template<typename HandlerType> class TimeoutHandlerWrapper
     {
-        if(err)
+    public:
+        /**
+         * @brief Constructor
+         * 
+         * @param timer timer used to execute timeout handler.
+         * @param handler Task function object.
+         */
+        TimeoutHandlerWrapper(typename BaseType::ptr_t &timer, HandlerType &&handler) : m_timer(std::move(timer))
+            , m_handler(std::forward<HandlerType>(handler))
         {
-            LOG4CPLUS_ERROR_FMT(BaseType::Logger(), "等待队列任务延时错误（%s）。", err.message().c_str());
         }
-        func(err, std::forward<Args>(args)...);
-    }
+
+        /**
+         * @brief Move constructor
+         * 
+         * @param rhs Moved object
+         */
+        TimeoutHandlerWrapper(TimeoutHandlerWrapper &&rhs) noexcept : m_timer(std::move(rhs.m_timer))
+            , m_handler(std::forward<HandlerType>(rhs.m_handler))
+        {
+        }
+
+        /**
+         * @brief Move operator=
+         * 
+         * @param rhs Moved object
+         * @return Self object
+         */
+        TimeoutHandlerWrapper& operator=(TimeoutHandlerWrapper &&rhs) noexcept
+        {
+            m_timer = std::move(rhs.m_timer);
+            m_handler = std::forward<HandlerType>(rhs.m_handler);
+        }
+
+        /**
+         * @brief Timer callback entry
+         * 
+         * @param err Timeout error code
+         */
+        void operator()(const boost::system::error_code &err)
+        {
+            m_handler(err);
+        }
+
+    private:
+        typename BaseType::ptr_t m_timer; //timeout timer
+
+        typename std::decay<HandlerType>::type m_handler; //Timeout handler
+    };
 
 public:
     /**
@@ -108,21 +145,21 @@ public:
      * 
      * @tparam DurationType Duration time type
      * @tparam FuncType Task function type
-     * @tparam Args Task function argument types
      * @param duration specified duration time
      * @param func User request task function object
-     * @param args Task function arguments
      */
-    template<typename DurationType, typename FuncType, typename... Args> void QueueThreadPoolWorkItemAfter(DurationType duration, FuncType &&func
-        , Args&&... args)
+    template<typename DurationType, typename FuncType> void QueueThreadPoolWorkItemAfter(DurationType duration, FuncType &&func)
     {
         typename BaseType::ptr_t timer = BaseType::Get(DefaultTimerCacheKey);
         if(!timer)
         {
             LOG4CPLUS_ERROR(BaseType::Logger(), "获取Timer失败。");
-            boost::system::error_code err(boost::system::errc::resource_unavailable_try_again
-                , boost::system::generic_category());
-            QueueThreadPoolWorkItem(std::forward<FuncType>(func), err, std::forward<Args>(args)...);
+            QueueThreadPoolWorkItem([handler = std::forward<FuncType>(func)]() mutable
+                {
+                    boost::system::error_code err(boost::system::errc::resource_unavailable_try_again
+                        , boost::system::system_category());
+                    handler(err);
+                });
             return;
         }
         typename BaseType::ptr_t::pointer rawPtr = timer.get();
@@ -131,11 +168,14 @@ public:
         if(err)
         {
             LOG4CPLUS_ERROR_FMT(BaseType::Logger(), "设置等待事件错误（%s）。", err.message().c_str());
-            QueueThreadPoolWorkItem(std::forward<FuncType>(func), err, std::forward<Args>(args)...);
+            QueueThreadPoolWorkItem(
+                [handler = std::forward<FuncType>(func), error = err]() mutable
+                {
+                    handler(error);
+                });
             return;
         }
-        rawPtr->async_wait(std::bind(&TimerCacheBase::OnThreadPoolWorkItemDelayTimer<FuncType, Args...>
-            , std::placeholders::_1, std::move(timer), std::forward<FuncType>(func), std::forward<Args>(args)...));
+        rawPtr->async_wait(TimeoutHandlerWrapper<FuncType>(timer, std::forward<FuncType>(func)));
     }
 };
 

@@ -5,8 +5,8 @@ set(InstLibDir ${CMAKE_INSTALL_LIBDIR})
 set(UtilsVersion 1.0.0)
 set(UtilsSoVersion 1)
 
-AddSharedLibraryTarget(Utils SRC AppEntry/IProgressReporter.cpp AppEntry/WinSvcProgressReporter.cpp
-    AppEntry/SystemdProgressReporter.cpp
+AddSharedLibraryTarget(Utils SRC AppEntry/Signal/UnixSignalHelper.cpp AppEntry/IProgressReporter.cpp
+    AppEntry/WinSvcProgressReporter.cpp AppEntry/SystemdProgressReporter.cpp
     Buffer/BinaryHelper.cpp Buffer/CircularBuffer.cpp Buffer/CircularBufferCache.cpp Buffer/LinearBuffer.cpp
     Buffer/LinearBufferCache.cpp
     Channel/Common/IAsyncChannel.cpp Channel/Common/IAsyncChannelHandler.cpp Channel/SerialPort/SerialPortChannel.cpp

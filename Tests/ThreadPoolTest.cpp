@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(GeneralTest)
     GlobalThreadPoolTestBarrier.ResetTaskCount(taskCount);
     GlobalThreadPoolTestBarrier.Reset();
     SetInitConcurrentHint(boost::thread::hardware_concurrency());
-    MockThreadPool *pool = reinterpret_cast<MockThreadPool*>(&ThreadPool::Instance());
+    //MockThreadPool *pool = reinterpret_cast<MockThreadPool*>(&ThreadPool::Instance());
     ThreadPool::Instance();
     //BOOST_TEST(pool->m_currentThreadCount.load(std::memory_order_acquire) == hint);
     //BOOST_TEST(pool->m_threadBusyCount.load(std::memory_order_acquire) == 0);

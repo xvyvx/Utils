@@ -29,10 +29,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteTest)
 {
     LinearBuffer buf512;
     BOOST_TEST(buf512.capacity() == 0);
-
+    
+#ifndef NDEBUG
     us8 temp[3] = { 1, 2, 3 };
     std::initializer_list<us8> tempList{ 1, 2, 3 };
-#ifndef NDEBUG
     BOOST_CHECK_THROW(buf512.assign(1024, 10), std::out_of_range);
     BOOST_CHECK_THROW(buf512.assign(temp + sizeof(temp) / sizeof(us8), temp), std::out_of_range);
     BOOST_CHECK_THROW(buf512.assign(temp, temp + sizeof(temp) / sizeof(us8)), std::out_of_range);

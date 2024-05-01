@@ -6,8 +6,9 @@ const char SerialPortChannelLoggerName[] = "SerialPortChannel";
 
 template class UTILS_DEF_API StreamChannelBase<SerialPortTraits, SerialPortChannelLoggerName>;
 
-SerialPortChannel::SerialPortChannel(const SerialPortSettings &settings) : StreamChannelBase<SerialPortTraits, SerialPortChannelLoggerName>(std::make_shared<SerialPortTraits::StreamType>(ThreadPool::Instance().Context())), m_settings(settings),
-                                                                           m_closed(false)
+SerialPortChannel::SerialPortChannel(const SerialPortSettings &settings)
+    : StreamChannelBase<SerialPortTraits, SerialPortChannelLoggerName>(std::make_shared<SerialPortTraits::StreamType>(ThreadPool::Instance().Context()))
+    , m_settings(settings), m_closed(true)
 {
 }
 
@@ -24,54 +25,25 @@ void SerialPortChannel::AsyncOpen(const IAsyncChannelHandler::ptr_t &handler)
 {
     SpinLock<>::ScopeLock lock(BaseType::m_lock);
     boost::system::error_code err;
-    BaseType::m_stream->open(m_settings.m_deviceName, err);
-    if (!err)
+    if (!BaseType::m_stream->open(m_settings.m_deviceName, err))
     {
+        m_closed = false;
         SerialPortTraits::StreamType::baud_rate rate(m_settings.m_baudRate);
-        BaseType::m_stream->set_option(rate, err);
-        if (!err)
+        SerialPortTraits::StreamType::character_size characterSize(m_settings.m_characterSize);
+        if (BaseType::m_stream->set_option(rate, err)
+            || BaseType::m_stream->set_option(m_settings.m_flowCtrl, err)
+            || BaseType::m_stream->set_option(m_settings.m_parity, err)
+            || BaseType::m_stream->set_option(m_settings.m_stopBits, err)
+            || BaseType::m_stream->set_option(characterSize, err))
         {
-            BaseType::m_stream->set_option(m_settings.m_flowCtrl, err);
-            if (!err)
-            {
-                BaseType::m_stream->set_option(m_settings.m_parity, err);
-                if (!err)
-                {
-                    BaseType::m_stream->set_option(m_settings.m_stopBits, err);
-                    if (!err)
-                    {
-                        SerialPortTraits::StreamType::character_size characterSize(m_settings.m_characterSize);
-                        BaseType::m_stream->set_option(characterSize, err);
-                        if (err)
-                        {
-                            LOG4CPLUS_ERROR_FMT(BaseType::log, "设置SerialPort通道数据位错误：%s", err.message().c_str());
-                        }
-                    }
-                    else
-                    {
-                        LOG4CPLUS_ERROR_FMT(BaseType::log, "设置SerialPort通道停止位错误：%s", err.message().c_str());
-                    }
-                }
-                else
-                {
-                    LOG4CPLUS_ERROR_FMT(BaseType::log, "设置SerialPort通道效验位错误：%s", err.message().c_str());
-                }
-            }
-            else
-            {
-                LOG4CPLUS_ERROR_FMT(BaseType::log, "设置SerialPort通道流量控制错误：%s", err.message().c_str());
-            }
-        }
-        else
-        {
-            LOG4CPLUS_ERROR_FMT(BaseType::log, "设置SerialPort通道波特率错误：%s", err.message().c_str());
+            LOG4CPLUS_ERROR_FMT(BaseType::log, "设置SerialPort通道通讯参数错误：%s", err.message().c_str());
         }
     }
     else
     {
         LOG4CPLUS_ERROR_FMT(BaseType::log, "打开SerialPort通道错误：%s", err.message().c_str());
     }
-    QueueThreadPoolWorkItem(&IAsyncChannelHandler::EndOpen, handler, err);
+    QueueThreadPoolWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler, err));
 }
 
 void SerialPortChannel::AsyncClose(const IAsyncChannelHandler::ptr_t &handler)
@@ -79,7 +51,7 @@ void SerialPortChannel::AsyncClose(const IAsyncChannelHandler::ptr_t &handler)
     SpinLock<>::ScopeLock lock(BaseType::m_lock);
     boost::system::error_code err;
     Close(err);
-    QueueThreadPoolWorkItem(&IAsyncChannelHandler::EndClose, handler, err);
+    QueueThreadPoolWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler, err));
 }
 
 void SerialPortChannel::Close(boost::system::error_code &error)

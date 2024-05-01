@@ -1,3 +1,5 @@
+#if defined(linux) || defined(__linux)
+
 #include <boost/test/unit_test.hpp>
 #include "AppEntry/Signal/UnixSignalHelper.h"
 
@@ -9,3 +11,5 @@ BOOST_AUTO_TEST_CASE(DiscardChildInfoTest)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif

@@ -5,7 +5,7 @@ AddExecutableTarget(UtilsTest SRC TestStub.cpp LinearBufferTest.cpp CircularBuff
     BinaryHelperTest.cpp DiagnosticsTest.cpp ThreadPoolTest.cpp BlackMagicsTest.cpp WaitEventTest.cpp 
     UnixSignalHelperTest.cpp
     PRIVATE_INC ${CMAKE_CURRENT_SOURCE_DIR}/../Utils
-    DEPS Boost::unit_test_framework Boost::timer Utils)
+    DEPS Boost::chrono Boost::unit_test_framework Boost::timer Utils)
 
 AddTestCaseToTarget(UtilsTest TESTCASE CircularBufferCacheTest FILTER BufferCacheTest/CircularBufferCacheTest
     TESTCASE LinearBufferCacheTest FILTER BufferCacheTest/LinearBufferCacheTest

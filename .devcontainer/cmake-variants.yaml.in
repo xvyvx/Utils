@@ -1,0 +1,29 @@
+buildType:
+  default: gcc-Debug
+  choices:
+    gcc-Debug:
+      short: gcc-Debug
+      long: GCC debug build configuration
+      buildType: Debug
+      settings: 
+        CMAKE_TOOLCHAIN_FILE: ${workspaceFolder}/CMake/Toolchain/gcc-x86_64-linux-gnu.cmake
+        CMAKE_PREFIX_PATH: [
+          /root/component/boost_1_78_0/stage,
+          /root/component/log4cplus-REL_1_2_0/install/debug/
+        ]
+        Boost_USE_STATIC_LIBS: ON
+        otl_INCLUDEDIR: /root/component
+        otl_VERSION_MAJOR: 4
+    gcc-Release:
+      short: gcc-Release
+      long: GCC release build configuration
+      buildType: Release
+      settings: 
+        CMAKE_TOOLCHAIN_FILE: ${workspaceFolder}/CMake/Toolchain/gcc-x86_64-linux-gnu.cmake
+        CMAKE_PREFIX_PATH: [
+          /root/component/boost_1_78_0/stage,
+          /root/component/log4cplus-REL_1_2_0/install/release/
+        ]
+        Boost_USE_STATIC_LIBS: ON
+        otl_INCLUDEDIR: /root/component
+        otl_VERSION_MAJOR: 4

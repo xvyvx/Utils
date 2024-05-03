@@ -14,7 +14,7 @@ include(${PROJECT_SOURCE_DIR}/CMake/BuildUtils/BuildHelper.cmake)
 
 option(ENABLE_ODBC_DATABASE_UTILS "Enable or disable odbc database utilities(ON/OFF),default is OFF" OFF)
 option(ENABLE_OCI_DATABASE_UTILS "Enable or disable oci database utilities(ON/OFF),default is OFF" OFF)
-find_package(Boost REQUIRED COMPONENTS system thread regex filesystem program_options unit_test_framework timer)
+find_package(Boost REQUIRED COMPONENTS system chrono thread regex filesystem program_options unit_test_framework timer)
 find_package(log4cplus REQUIRED)
 find_package(otl REQUIRED)
 if(UNIX)

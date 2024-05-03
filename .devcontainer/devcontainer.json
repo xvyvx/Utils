@@ -8,7 +8,7 @@
 	"features": {
 		"ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
 			"plugins": "git zsh-autosuggestions zsh-syntax-highlighting",
-			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions https://github.com/zsh-users/zsh-autosuggestions"
+			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions https://github.com/zsh-users/zsh-syntax-highlighting"
 		},
 		"ghcr.io/schlich/devcontainer-features/powerlevel10k:1": {}
 	},

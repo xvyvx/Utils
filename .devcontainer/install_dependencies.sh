@@ -36,7 +36,7 @@ InstallLog4cplus()
 
 InstallOTL()
 {
-    cd $ComponentRootPath && mkdir otl && cd otl && wget -q http://otl.sourceforge.net/otlv4_h2.zip && unzip -q otlv4_h2.zip && rm -f ./otlv4_h2.zip return 0
+    cd $ComponentRootPath && mkdir otl && cd otl && wget -q http://otl.sourceforge.net/otlv4_h2.zip && unzip -q otlv4_h2.zip && rm -f ./otlv4_h2.zip && return 0
     return 1
 }
 

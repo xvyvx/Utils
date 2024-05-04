@@ -1,0 +1,10 @@
+[
+    {
+        "name": "gcc-x86_64-linux-gnu",
+        "toolchainFile": "${workspaceFolder}/CMake/Toolchain/gcc-x86_64-linux-gnu.cmake"
+    },
+    {
+        "name": "llvm-x86_64-linux-gnu",
+        "toolchainFile": "${workspaceFolder}/CMake/Toolchain/llvm-x86_64-linux-gnu.cmake"
+    }
+]

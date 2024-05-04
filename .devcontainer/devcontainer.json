@@ -33,7 +33,8 @@
 				"cschlosser.doxdocgen",
 				"github.vscode-github-actions",
 				"eamodio.gitlens",
-				"ms-vscode.hexeditor"
+				"ms-vscode.hexeditor",
+				"-ms-vscode.cpptools"
 			]
 		}
 	},

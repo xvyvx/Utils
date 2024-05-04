@@ -20,7 +20,7 @@ InstallLog4cplus()
 {
     cd $ComponentRootPath
     if wget --no-check-certificate --quiet https://github.com/log4cplus/log4cplus/archive/REL_1_2_0.zip; then
-        unzip -q REL_1_2_0.zip && rm -f REL_1_2_0.zip && ./ cd log4cplus-REL_1_2_0 && mkdir -p build/debug && cd build/debug && \
+        unzip -q REL_1_2_0.zip && rm -f REL_1_2_0.zip && cd log4cplus-REL_1_2_0 && mkdir -p build/debug && cd build/debug && \
         cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-std=c++14" -DLOG4CPLUS_BUILD_TESTING=OFF -DLOG4CPLUS_BUILD_LOGGINGSERVER=OFF \
             -DCMAKE_INSTALL_PREFIX="../../install/debug" ../.. && \
         cmake --build . --target install && \

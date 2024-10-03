@@ -2,6 +2,7 @@ name: build-dev-img
 on:
   schedule:
     - cron: '0 8 * * 6'
+  workflow_dispatch:
 jobs:
   buildImg:
     runs-on: ubuntu-20.04

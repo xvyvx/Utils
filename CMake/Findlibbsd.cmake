@@ -1,9 +1,9 @@
 find_path(libbsd_INCLUDE_DIR NAMES bsd/libutil.h PATHS ${libbsd_INCLUDEDIR})
 
 get_filename_component(libbsd_LIBRARY_DIR_DEBUG ./Debug ABSOLUTE BASE_DIR ${libbsd_LIBRARYDIR})
-find_library(libbsd_LIBRARY_DEBUG "bsd" PATHS ${libbsd_LIBRARY_DIR_DEBUG})
+find_library(libbsd_LIBRARY_DEBUG "bsd" PATHS ${libbsd_LIBRARY_DIR_DEBUG} ${libbsd_LIBRARYDIR})
 get_filename_component(libbsd_LIBRARY_DIR_RELEASE ./Release ABSOLUTE BASE_DIR ${libbsd_LIBRARYDIR})
-find_library(libbsd_LIBRARY_RELEASE "bsd" PATHS ${libbsd_LIBRARY_DIR_RELEASE})
+find_library(libbsd_LIBRARY_RELEASE "bsd" PATHS ${libbsd_LIBRARY_DIR_RELEASE} ${libbsd_LIBRARYDIR})
 if(libbsd_LIBRARY_DEBUG AND libbsd_LIBRARY_RELEASE)
     set(libbsd_LIBRARY_DEBUG ${libbsd_LIBRARY_DEBUG} CACHE PATH "libbsd debug include path" FORCE)
     set(libbsd_LIBRARY_RELEASE ${libbsd_LIBRARY_RELEASE} CACHE PATH "libbsd release include path" FORCE)

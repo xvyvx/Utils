@@ -323,7 +323,7 @@ private:
             {
                 resultHandlers.push_back(SignalHandlerBase::ptr_t(new SignalHandler<typename std::decay<First>::type>(
                     std::forward<First>(desc))));
-                if(sigaddset(&signalSet, desc.SigNum()) != 0)
+                if(signal(desc.SigNum(), SIG_DFL) == SIG_ERR || sigaddset(&signalSet, desc.SigNum()) != 0)
                 {
                     resultHandlers.pop_back();
                     LOG4CPLUS_ERROR_FMT(log, "添加待分发信号错误（%d）。", desc.SigNum());

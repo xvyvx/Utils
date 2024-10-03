@@ -431,7 +431,7 @@ public:
     */
     reference operator*()
     {
-        return this->operator[](m_index);
+        return this->operator[](0);
     }
 
     /**
@@ -441,7 +441,7 @@ public:
     */
     pointer operator->()
     {
-        return &this->operator[](m_index);
+        return &this->operator[](0);
     }
 
     /**
@@ -525,7 +525,7 @@ public:
     */
     reference operator[](size_t index)
     {
-        return m_buf->operator[](index);
+        return m_buf->operator[](m_index + index);
     }
 
     /**

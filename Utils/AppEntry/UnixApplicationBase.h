@@ -21,7 +21,6 @@
 #include "IProgressReporter.h"
 #include "SystemdProgressReporter.h"
 #include "Signal/SignalDispatcher.hpp"
-#include "Signal/UnixSignalHelper.h"
 #include "../Common/PathHelper.h"
 #include "../Log/Log4cplusCustomInc.h"
 
@@ -153,7 +152,6 @@ private:
         SysVDaemonIniResult_FirstForkFailed,	/**< Constant representing first fork call failed */
         SysVDaemonIniResult_ParentReadPipeFailed,   /**< Constant representing the parent process read pipe failed */
         SysVDaemonIniResult_SetsidFailed,   /**< Constant representing setsid call failed */
-        SysVDaemonIniResult_SetChildStatusInfoDiscardFailed, /**< Constant representing set discard child status info failed */
         SysVDaemonIniResult_SecondForkFailed,   /**< Constant representing second fork call failed */
         SysVDaemonIniResult_DaemonOpenNullFileFailed,   /**< Constant representing the daemon process open null file descriptor failed */
         SysVDaemonIniResult_DaemonRedirectFailed,	/**< Constant representing the daemon process redirect stdin,stdout,stderr failed */
@@ -760,6 +758,11 @@ template<typename T,T *Proc> std::unique_ptr<log4cplus::ConfigureAndWatchThread>
         return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
     }
 
+    //TODO 自定义路径
+    std::string path = PathHelper::AppDeployPath();
+    PathHelper::Combine(&path, "Configuration", "log4cplus.properties", 0);
+    std::unique_ptr<log4cplus::ConfigureAndWatchThread> watchThread(new log4cplus::ConfigureAndWatchThread(path, 6000));
+
     if(!m_sigDispatcher.AddIgnoredSignals({ SIGTTIN, SIGTTOU }) || !m_sigDispatcher.AddDispatchedSignals(
 		MakeSignalDescriptor(SIGTERM, std::bind(&ApplicationBase<T, Proc>::OnExitSignal, this), SignalDispatchType_Direct)
 		, MakeSignalDescriptor(SIGINT, std::bind(&ApplicationBase<T, Proc>::OnExitSignal, this), SignalDispatchType_Direct)
@@ -767,13 +770,10 @@ template<typename T,T *Proc> std::unique_ptr<log4cplus::ConfigureAndWatchThread>
 		, MakeSignalDescriptor(SIGHUP, std::bind(&ApplicationBase<T, Proc>::OnExitSignal, this), SignalDispatchType_Direct))
 		|| !InitializeCustomSignalHandler(0))
 	{
+        watchThread.reset();
 		return std::unique_ptr<log4cplus::ConfigureAndWatchThread>();
 	}
 
-    //TODO 自定义路径
-    std::string path = PathHelper::AppDeployPath();
-    PathHelper::Combine(&path, "Configuration", "log4cplus.properties", 0);
-    std::unique_ptr<log4cplus::ConfigureAndWatchThread> watchThread(new log4cplus::ConfigureAndWatchThread(path, 6000));
     return watchThread;
 }
 
@@ -841,12 +841,6 @@ template<typename T, T* Proc> int ApplicationBase<T, Proc>::SysVDaemonChildIniti
         WriteNotifyPipeMsg(writePipe, SysVDaemonIniResult_SetsidFailed);
         close(writePipe);
         return SysVDaemonIniResult_SetsidFailed;
-    }
-    if (!UnixSignalHelper::DiscardChildProcessExitInfo())
-    {
-        WriteNotifyPipeMsg(writePipe, SysVDaemonIniResult_SetChildStatusInfoDiscardFailed);
-        close(writePipe);
-        return SysVDaemonIniResult_SetChildStatusInfoDiscardFailed;
     }
     result = fork();
     if (result == -1)

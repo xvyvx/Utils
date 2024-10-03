@@ -3,7 +3,8 @@
 {
 	"name": "C++",
 	"build": {
-		"dockerfile": "Dockerfile"
+		"dockerfile": "Dockerfile",
+		"cacheFrom": "ghcr.io/xvyvx/utils-dev-img:latest"
 	},
 	"features": {
 		"ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {

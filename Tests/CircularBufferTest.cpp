@@ -92,7 +92,11 @@ template<typename T> void CircularBufferIteratorTestCore(T &&iter)
     BOOST_TEST(*(++iter) == 2);
     BOOST_TEST(*(--iter) == 1);
     BOOST_TEST(*(iter += 2) == 3);
+    BOOST_TEST(iter[0] == 3);
+    BOOST_TEST(iter[1] == 4);
     BOOST_TEST(*(iter -= 2) == 1);
+    BOOST_TEST(iter[0] == 1);
+    BOOST_TEST(iter[1] == 2);
     auto iter2 = iter + 2;
     BOOST_TEST(*iter2 == 3);
     iter2 = iter2 - 2;

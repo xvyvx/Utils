@@ -32,7 +32,8 @@
     #if defined(_WIN64)
     #define IS_WINDOWS_64
     #endif
-#elif defined(linux) || defined(__linux) || defined(unix) || defined(__unix) || defined(_XOPEN_SOURCE) || defined(_POSIX_SOURCE)
+#elif defined(linux) || defined(__linux) || defined(__APPLE__) || defined(unix) || defined(__unix) || defined(_XOPEN_SOURCE) \
+    || defined(_POSIX_SOURCE)
     #define IS_UNIX
 #endif
 

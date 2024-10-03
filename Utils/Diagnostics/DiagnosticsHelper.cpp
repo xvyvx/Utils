@@ -126,6 +126,62 @@ int DiagnosticsHelper::GetProcessorUsage()
     return usage;
 }
 
+#elif defined(__APPLE__)
+
+#include <mach/mach_host.h>
+
+namespace
+{
+    unsigned long long GlobalTotalTicks;
+
+    unsigned long long GlobalIdleTicks;
+
+    void GetProcessorUsageInfo()
+    {
+        host_cpu_load_info_data_t cpuinfo;
+        mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
+        kern_return_t result = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, reinterpret_cast<host_info_t>(&cpuinfo)
+            , &count);
+        if(result == KERN_SUCCESS)
+        {
+            GlobalTotalTicks = 0;
+            for(int i = 0; i < CPU_STATE_MAX; i++)
+            {
+                GlobalTotalTicks += cpuinfo.cpu_ticks[i];
+            }
+            GlobalIdleTicks = cpuinfo.cpu_ticks[CPU_STATE_IDLE];
+        }
+        else
+        {
+            throw std::system_error(std::error_code(result, std::system_category()));
+        }
+    }
+
+    class DiagnosticsHelperInitializer
+    {
+    public:
+        DiagnosticsHelperInitializer()
+        {
+            GetProcessorUsageInfo();
+        }
+    } Initializer;
+}
+
+int DiagnosticsHelper::GetProcessorUsage()
+{
+    us64 oldGlobalTotalTicks = GlobalTotalTicks;
+    us64 oldGlobalIdleTicks = GlobalIdleTicks;
+    GetProcessorUsageInfo();
+    us64 totalValue = GlobalTotalTicks - oldGlobalTotalTicks;
+    us64 totalIdleValue = GlobalIdleTicks - oldGlobalIdleTicks;
+    if(totalValue == 0)
+    {
+        return 0;
+    }
+    int usage = static_cast<int>((totalValue - totalIdleValue) * 100 / totalValue);
+    return usage;
+}
+
 #else
 #error Unsupportted platform
 #endif

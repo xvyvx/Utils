@@ -51,7 +51,11 @@ WaitEvent::WaitEvent() : m_status(Status_Normal)
 		pthread_mutex_destroy(&m_mutex);
 		m_status = Status_Error;
 	}
-	else if(pthread_condattr_setclock(&attr, CLOCK_MONOTONIC) != 0 || pthread_cond_init(&m_cond, &attr) != 0)
+	else if(
+#if !defined(__APPLE__)
+		pthread_condattr_setclock(&attr, CLOCK_MONOTONIC) != 0 || 
+#endif
+		pthread_cond_init(&m_cond, &attr) != 0)
 	{
 		pthread_condattr_destroy(&attr);
 		pthread_mutex_destroy(&m_mutex);

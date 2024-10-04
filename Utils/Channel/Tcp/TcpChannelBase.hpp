@@ -6,13 +6,16 @@
 #include "../../Concurrent/ThreadPool.h"
 
 template <typename ProtocolTraits, const char *LoggerName>
-TcpChannelBase<ProtocolTraits, LoggerName>::TcpChannelBase(const std::string &remoteAddr, us16 remotePort, bool openOnConstruct, us16 localPort, const std::string &localAddr) : TcpChannelBase(ProtocolTraits::AddressFromString(remoteAddr), remotePort, openOnConstruct, localPort, ProtocolTraits::AddressFromString(localAddr))
+TcpChannelBase<ProtocolTraits, LoggerName>::TcpChannelBase(const std::string &remoteAddr, us16 remotePort, bool openOnConstruct, us16 localPort, const std::string &localAddr)
+    : TcpChannelBase(ProtocolTraits::AddressFromString(remoteAddr), remotePort, openOnConstruct, localPort, ProtocolTraits::AddressFromString(localAddr))
 {
 }
 
 template <typename ProtocolTraits, const char *LoggerName>
-TcpChannelBase<ProtocolTraits, LoggerName>::TcpChannelBase(const typename ProtocolTraits::AddressType &remoteAddr, us16 remotePort, bool openOnConstruct, us16 localPort, const typename ProtocolTraits::AddressType &localAddr)
-    : StreamChannelBase<ProtocolTraits, LoggerName>(std::make_shared<typename ProtocolTraits::StreamType>(ThreadPool::Instance().Context())), m_localEndPoint(localAddr, localPort), m_remoteEndPoint(remoteAddr, remotePort), m_closed(true)
+TcpChannelBase<ProtocolTraits, LoggerName>::TcpChannelBase(const typename ProtocolTraits::AddressType &remoteAddr, us16 remotePort, bool openOnConstruct, us16 localPort
+    , const typename ProtocolTraits::AddressType &localAddr): StreamChannelBase<ProtocolTraits, LoggerName>(
+    std::make_shared<typename ProtocolTraits::StreamType>(ThreadPool::Instance().Context())), m_localEndPoint(localAddr, localPort), m_remoteEndPoint(remoteAddr, remotePort)
+    , m_closed(true)
 {
     if (openOnConstruct)
     {

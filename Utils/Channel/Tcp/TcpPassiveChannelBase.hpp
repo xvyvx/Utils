@@ -36,7 +36,8 @@ template<typename ProtocolTraits, const char *LoggerName> void TcpPassiveChannel
     QueueThreadPoolWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler, shutdownErr ? shutdownErr : closeErr));
 }
 
-template<typename ProtocolTraits, const char *LoggerName> void TcpPassiveChannelBase<ProtocolTraits, LoggerName>::Close(boost::system::error_code &shutdownErr, boost::system::error_code &closeErr)
+template<typename ProtocolTraits, const char *LoggerName> void TcpPassiveChannelBase<ProtocolTraits, LoggerName>::Close(boost::system::error_code &shutdownErr
+    , boost::system::error_code &closeErr)
 {
     if (!m_closed)
     {

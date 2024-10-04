@@ -42,3 +42,4 @@ InstallOTL()
 
 apt-get update -qq && apt-get -qq install -y libbsd-dev socat
 mkdir -p $ComponentRootPath && InstallBoost && InstallLog4cplus && InstallOTL
+apt-get clean

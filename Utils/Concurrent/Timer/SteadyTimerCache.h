@@ -17,7 +17,7 @@ public:
  * @brief Steady Timer cache impletemented by @ref TimerCacheBase.
  * 
  */
-typedef TimerCacheBase<boost::asio::steady_timer, SteadyTimerCacheFactory, SteadyTimerCacheLoggerName> SteadyTimerCache;
+using SteadyTimerCache = TimerCacheBase<boost::asio::steady_timer, SteadyTimerCacheFactory, SteadyTimerCacheLoggerName>;
 
 extern template class UTILS_DECL_API ObjectPoolBase
 <

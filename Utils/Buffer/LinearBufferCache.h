@@ -2,7 +2,7 @@
 #define LINEARBUFFERCACHE_H
 
 #include "BufferCacheBase.h"
-#include "BufferDescriptor.h"
+#include "LinearBuffer.h"
 
 extern const char LinearBufferCacheLoggerName[];
 
@@ -17,7 +17,7 @@ public:
 /**
  * Linear buffer cache impletemented by @ref BufferCacheBase.
  */
-typedef BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, LinearBufferCacheLoggerName> LinearBufferCache;
+using LinearBufferCache = BufferCacheBase<LinearBuffer, LinearBufferCacheFactory, LinearBufferCacheLoggerName>;
 
 extern template class UTILS_DECL_API ObjectPoolBase
 <
@@ -51,7 +51,7 @@ extern template class UTILS_DECL_API BufferCacheBase
  * 
  * @tparam T None Trivial element type.
  */
-template<typename T> class LinearBufferNoTrivialWrapper
+template<typename T> class LinearBufferNotTrivialWrapper
 {
 public:
     friend class LinearBufferCacheHelper; //friend class definition
@@ -61,13 +61,13 @@ public:
      * 
      * @param rhs moved object
      */
-    LinearBufferNoTrivialWrapper(LinearBufferNoTrivialWrapper &&rhs) noexcept;
+    LinearBufferNotTrivialWrapper(LinearBufferNotTrivialWrapper &&rhs) noexcept;
 
     /**
      * @brief Destructor
      * 
      */
-    ~LinearBufferNoTrivialWrapper();
+    ~LinearBufferNotTrivialWrapper();
 
     /**
      * @brief Move operator
@@ -75,7 +75,7 @@ public:
      * @param rhs moved object
      * @return LinearBufferNoTrivialWrapper& Self reference.
      */
-    LinearBufferNoTrivialWrapper& operator=(LinearBufferNoTrivialWrapper &&rhs) noexcept;
+    LinearBufferNotTrivialWrapper& operator=(LinearBufferNotTrivialWrapper &&rhs) noexcept;
 
     /**
      * @brief Construct new element on the end of the vector.
@@ -119,7 +119,7 @@ public:
     }
 
 private:
-    LinearBufferNoTrivialWrapper()
+    LinearBufferNotTrivialWrapper()
     {
     }
 
@@ -171,24 +171,24 @@ public:
      * @param allocSizeHint Init alloc size hint for vector(count of element).
      * @return LinearBufferNoTrivialWrapper<T> Created vector wrapper.
      */
-    template<typename T> static LinearBufferNoTrivialWrapper<T> AllocNoTrivialVectorFromPool(size_t allocSizeHint)
+    template<typename T> static LinearBufferNotTrivialWrapper<T> AllocVectorFromPool(size_t allocSizeHint)
     {
-        LinearBufferNoTrivialWrapper<T> ret;
+        LinearBufferNotTrivialWrapper<T> ret;
         ret.m_ptr = AllocVectorFromPool<T>(ret.m_holder, ret.m_count, allocSizeHint);
         ret.m_count = 0;
         return ret;
     }
 };
 
-template<typename T> LinearBufferNoTrivialWrapper<T>::LinearBufferNoTrivialWrapper(
-    LinearBufferNoTrivialWrapper &&rhs) noexcept : m_holder(std::move(rhs.m_holder)), m_ptr(rhs.m_ptr)
+template<typename T> LinearBufferNotTrivialWrapper<T>::LinearBufferNotTrivialWrapper(
+    LinearBufferNotTrivialWrapper &&rhs) noexcept : m_holder(std::move(rhs.m_holder)), m_ptr(rhs.m_ptr)
     , m_count(rhs.m_count)
 {
     rhs.m_ptr = nullptr;
     rhs.m_count = 0;
 }
 
-template<typename T> LinearBufferNoTrivialWrapper<T>::~LinearBufferNoTrivialWrapper()
+template<typename T> LinearBufferNotTrivialWrapper<T>::~LinearBufferNotTrivialWrapper()
 {
     for(size_t i = 0; i < m_count; ++i)
     {
@@ -196,8 +196,8 @@ template<typename T> LinearBufferNoTrivialWrapper<T>::~LinearBufferNoTrivialWrap
     }
 }
 
-template<typename T> LinearBufferNoTrivialWrapper<T>& LinearBufferNoTrivialWrapper<T>::operator=(
-    LinearBufferNoTrivialWrapper &&rhs) noexcept
+template<typename T> LinearBufferNotTrivialWrapper<T>& LinearBufferNotTrivialWrapper<T>::operator=(
+    LinearBufferNotTrivialWrapper &&rhs) noexcept
 {
     m_holder.swap(rhs.m_holder);
     std::swap(m_ptr, rhs.m_ptr);
@@ -205,7 +205,7 @@ template<typename T> LinearBufferNoTrivialWrapper<T>& LinearBufferNoTrivialWrapp
     return *this;
 }
 
-template<typename T> template<typename... Args> T& LinearBufferNoTrivialWrapper<T>::Construct(Args&&... args)
+template<typename T> template<typename... Args> T& LinearBufferNotTrivialWrapper<T>::Construct(Args&&... args)
 {
     T *ptr = m_ptr + m_count++;
     new(ptr) T(std::forward<Args>(args)...);

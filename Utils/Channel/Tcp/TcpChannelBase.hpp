@@ -44,16 +44,16 @@ void TcpChannelBase<ProtocolTraits, LoggerName>::AsyncOpen(const IAsyncChannelHa
         Open(err);
         if (err)
         {
-            QueueThreadPoolWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler, err));
+            QueueThreadPoolWorkItem([handler = handler, err = err]() { handler->EndOpen(err); });
         }
         else
         {
-            BaseType::m_stream->async_connect(m_remoteEndPoint, std::bind(&IAsyncChannelHandler::EndOpen, handler, std::placeholders::_1));
+            BaseType::m_stream->async_connect(m_remoteEndPoint, [handler = handler](const boost::system::error_code &err) { handler->EndOpen(err); });
         }
     }
     else
     {
-        BaseType::m_stream->async_connect(m_remoteEndPoint, std::bind(&IAsyncChannelHandler::EndOpen, handler, std::placeholders::_1));
+        BaseType::m_stream->async_connect(m_remoteEndPoint, [handler = handler](const boost::system::error_code &err) { handler->EndOpen(err); });
     }
 }
 
@@ -64,8 +64,7 @@ void TcpChannelBase<ProtocolTraits, LoggerName>::AsyncClose(
     SpinLock<>::ScopeLock lock(BaseType::m_lock);
     boost::system::error_code shutdownErr, closeErr;
     Close(shutdownErr, closeErr);
-    QueueThreadPoolWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler
-        , shutdownErr ? shutdownErr : closeErr));
+    QueueThreadPoolWorkItem([handler = handler, err = shutdownErr ? shutdownErr : closeErr]() { handler->EndClose(err); });
 }
 
 template <typename ProtocolTraits, const char *LoggerName>

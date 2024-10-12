@@ -44,10 +44,10 @@ const std::string& PathHelper::AppExecutablePath()
 #define FILE_SYSTEM_SEPARATOR_CHAR '\\'
 
 #if defined(FORCE_EXECUTION_CHAR_SET_UTF8)
-typedef wchar_t CharType;
+using CharType = wchar_t;
 #define GetModuleFileNameFunc GetModuleFileNameW
 #else
-typedef char CharType;
+using CharType = char;
 #define GetModuleFileNameFunc GetModuleFileNameA
 #endif
 

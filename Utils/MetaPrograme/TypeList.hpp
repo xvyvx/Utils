@@ -48,6 +48,24 @@ public:
         };
     };
 
+    template<typename SearchType> class Have
+    {
+    public:
+        enum
+        {
+            Value = !std::is_same
+                <
+                    typename List::Algorithms::Search<SearchType, 0, Results...>::Type
+                    , TypedValue<MetaPrograme::List::Algorithms::ListIndexType, -1>
+                >::value
+        };
+    };
+
+    enum
+    {
+        Empty = sizeof...(Results) == 0 ? 1 : 0
+    };
+
     template<typename T> static bool Contain(T &&value)
     {
         return AnyOf<T, Results...>(std::forward<T>(value));

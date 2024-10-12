@@ -2,8 +2,6 @@
 #define BUFDESCRIPTOR_H
 
 #include "../Common/CommonHdr.h"
-#include <vector>
-#include "LinearBuffer.h"
 
 typedef struct
 {

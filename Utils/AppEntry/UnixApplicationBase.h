@@ -43,7 +43,7 @@ public:
     /**
      * Defines an alias representing type of the self
      */
-    typedef ApplicationBase<T, Proc> SelfType;
+    using SelfType = ApplicationBase<T, Proc>;
 
     static constexpr size_t MaxServiceNameLength = 31;  /**< The maximum service name length */
 
@@ -126,7 +126,7 @@ private:
     /**
      * Defines an alias representing the internal handler.
      */
-    typedef int (SelfType::*ParamHandler)();
+    using ParamHandler = int (SelfType::*)();
 
     /**
      * Values that represent daemon types
@@ -160,7 +160,7 @@ private:
         SysVDaemonIniResult_DaemonStartupFailed /**< Constant representing the daemon process call startup failed */
     };
 
-    typedef SignalDispatcher<SIGTERM, SIGINT, SIGQUIT, SIGHUP> SignalDispatcherType; //Signal dispatcher type
+    using SignalDispatcherType = SignalDispatcher<SIGTERM, SIGINT, SIGQUIT, SIGHUP>; //Signal dispatcher type
 
     /**
      * Copy constructor(deleted)
@@ -764,10 +764,10 @@ template<typename T,T *Proc> std::unique_ptr<log4cplus::ConfigureAndWatchThread>
     std::unique_ptr<log4cplus::ConfigureAndWatchThread> watchThread(new log4cplus::ConfigureAndWatchThread(path, 6000));
 
     if(!m_sigDispatcher.AddIgnoredSignals({ SIGTTIN, SIGTTOU }) || !m_sigDispatcher.AddDispatchedSignals(
-		MakeSignalDescriptor(SIGTERM, std::bind(&ApplicationBase<T, Proc>::OnExitSignal, this), SignalDispatchType_Direct)
-		, MakeSignalDescriptor(SIGINT, std::bind(&ApplicationBase<T, Proc>::OnExitSignal, this), SignalDispatchType_Direct)
-		, MakeSignalDescriptor(SIGQUIT, std::bind(&ApplicationBase<T, Proc>::OnExitSignal, this), SignalDispatchType_Direct)
-		, MakeSignalDescriptor(SIGHUP, std::bind(&ApplicationBase<T, Proc>::OnExitSignal, this), SignalDispatchType_Direct))
+		MakeSignalDescriptor(SIGTERM, [this]() mutable { OnExitSignal(); }, SignalDispatchType_Direct)
+		, MakeSignalDescriptor(SIGINT, [this]() mutable { OnExitSignal(); }, SignalDispatchType_Direct)
+		, MakeSignalDescriptor(SIGQUIT, [this]() mutable { OnExitSignal(); }, SignalDispatchType_Direct)
+		, MakeSignalDescriptor(SIGHUP, [this]() mutable { OnExitSignal(); }, SignalDispatchType_Direct))
 		|| !InitializeCustomSignalHandler(0))
 	{
         watchThread.reset();

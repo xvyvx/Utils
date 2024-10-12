@@ -43,7 +43,7 @@ void SerialPortChannel::AsyncOpen(const IAsyncChannelHandler::ptr_t &handler)
     {
         LOG4CPLUS_ERROR_FMT(BaseType::log, "打开SerialPort通道错误：%s", err.message().c_str());
     }
-    QueueThreadPoolWorkItem(std::bind(&IAsyncChannelHandler::EndOpen, handler, err));
+    QueueThreadPoolWorkItem([handler = handler, err = err]() mutable { handler->EndOpen(err); });
 }
 
 void SerialPortChannel::AsyncClose(const IAsyncChannelHandler::ptr_t &handler)
@@ -51,7 +51,7 @@ void SerialPortChannel::AsyncClose(const IAsyncChannelHandler::ptr_t &handler)
     SpinLock<>::ScopeLock lock(BaseType::m_lock);
     boost::system::error_code err;
     Close(err);
-    QueueThreadPoolWorkItem(std::bind(&IAsyncChannelHandler::EndClose, handler, err));
+    QueueThreadPoolWorkItem([handler = handler, err = err]() mutable { handler->EndClose(err); });
 }
 
 void SerialPortChannel::Close(boost::system::error_code &error)

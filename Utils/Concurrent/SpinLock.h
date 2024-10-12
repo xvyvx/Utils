@@ -52,16 +52,16 @@ private:
 template<typename BlackMagicType = BlackMagicFuncPtr, BlackMagicType BlackMagic = DefaultBlackMagicFunc> class SpinLock
 {
 public:
-    typedef enum
+    using LockState = enum
     {
         Locked, /**< Lock status. */
         Unlocked /**< Unlock status. */
-    } LockState;	/**< State of the lock */
+    };	/**< State of the lock */
 
     /**
      * Defines an alias representing the scope lock guard.
      */
-    typedef LockGuard<SpinLock<BlackMagicType, BlackMagic>> ScopeLock;
+    using ScopeLock = LockGuard<SpinLock<BlackMagicType, BlackMagic>>;
 
     /**
      * Default constructor

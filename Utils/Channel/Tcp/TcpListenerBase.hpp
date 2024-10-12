@@ -171,8 +171,11 @@ template<typename ProtocolTraits, typename AcceptFunc, AcceptFunc *AcceptFunctio
     std::shared_ptr<boost::asio::ip::tcp::socket> sock(new boost::asio::ip::tcp::socket(ThreadPool::Instance().Context()));
     std::shared_ptr<boost::asio::ip::tcp::endpoint> remotePoint(new boost::asio::ip::tcp::endpoint());
     listener->async_accept(*sock, *remotePoint
-        , std::bind(&TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>::EndAccept
-            , BaseType::shared_from_this(), sock, remotePoint, listener, std::placeholders::_1));
+        , [self = BaseType::shared_from_this(), sock = sock, remotePoint = remotePoint, listener = listener]
+        (const boost::system::error_code& error)
+        {
+            self->EndAccept(sock, remotePoint, listener, error);
+        });
 }
 
 template<typename ProtocolTraits, typename AcceptFunc, AcceptFunc *AcceptFunction, const char *LoggerName> 

@@ -35,7 +35,7 @@ public:
     /**
     * Defines an alias representing type of the self
     */
-    typedef ApplicationBase<T, Proc> SelfType;
+    using SelfType = ApplicationBase<T, Proc>;
 
     static constexpr size_t MaxServiceNameLength = 31; /**< The maximum service name length */
 
@@ -102,7 +102,7 @@ private:
     /**
      * Defines an alias representing the internal handler.
      */
-    typedef int (SelfType::*ParamHandler)();
+    using ParamHandler = int (SelfType::*)();
 
     /**
      * Copy constructor(deleted)

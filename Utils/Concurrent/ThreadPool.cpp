@@ -55,7 +55,7 @@ bool ThreadPool::CreateThread()
 {
     try
     {
-        boost::thread t(std::bind(&ThreadPool::ThreadEntry, this));
+        boost::thread t([this]() { ThreadEntry(this); });
         t.detach();
     }
     catch(const std::exception &ex)

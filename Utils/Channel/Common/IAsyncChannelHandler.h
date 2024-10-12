@@ -15,7 +15,7 @@ public:
     /**
      * Defines an alias representing the std::shared_ptr<IAsyncChannelHandler>.
      */
-    typedef std::shared_ptr<IAsyncChannelHandler> ptr_t;
+    using ptr_t = std::shared_ptr<IAsyncChannelHandler>;
 
     /**
      * Default constructor

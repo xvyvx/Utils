@@ -6,7 +6,7 @@
 /**
  * Black magic function pointer.
  */
-typedef void(*BlackMagicFuncPtr)(unsigned);
+using BlackMagicFuncPtr = void (*)(unsigned int);
 
 /**
  * Default black magic function

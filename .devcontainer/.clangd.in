@@ -1,2 +1,30 @@
+Diagnostics:
+  ClangTidy:
+    Add: [
+      abseil-*,
+      altera-*,
+      android-*,
+      boost-*,
+      bugprone-*,
+      cert-*,
+      clang-analyzer-*,
+      concurrency-*,
+      cppcoreguidelines-*,
+      darwin-*,
+      google-*,
+      hicpp-*,
+      llvm-*,
+      misc-*,
+      modernize-*,
+      mpi-*,
+      performance-*,
+      portability-*,
+      readability-*,
+    ]
+    Remove: [
+      modernize-use-trailing-return-type
+    ]
 InlayHints:
+  Designators: No
   ParameterNames: No
+  DeducedTypes: No

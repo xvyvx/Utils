@@ -20,7 +20,7 @@ public:
     /**
      * Defines an alias representing type of the base class.
      */
-    typedef StreamChannelBase<SerialPortTraits, SerialPortChannelLoggerName> BaseType;
+    using BaseType = StreamChannelBase<SerialPortTraits, SerialPortChannelLoggerName>;
 
     /**
      * Constructor

@@ -2,8 +2,6 @@ Diagnostics:
   ClangTidy:
     Add: [
       abseil-*,
-      altera-*,
-      android-*,
       boost-*,
       bugprone-*,
       cert-*,

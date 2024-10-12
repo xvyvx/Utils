@@ -9,7 +9,7 @@ extern const char TcpV4ChannelLoggerName[];
 /**
  * TCP v4 channel.
  */
-typedef TcpChannelBase<TcpV4Traits, TcpV4ChannelLoggerName> TcpV4Channel;
+using TcpV4Channel = TcpChannelBase<TcpV4Traits, TcpV4ChannelLoggerName>;
 
 extern template class UTILS_DECL_API TcpChannelBase<TcpV4Traits, TcpV4ChannelLoggerName>;
 

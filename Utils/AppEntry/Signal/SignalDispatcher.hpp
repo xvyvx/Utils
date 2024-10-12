@@ -109,7 +109,7 @@ template<typename T> inline SignalDescriptor<T> MakeSignalDescriptor(int sigNum,
 class SignalHandlerBase
 {
 public:
-    typedef std::unique_ptr<SignalHandlerBase> ptr_t; //Pointer type
+    using ptr_t = std::unique_ptr<SignalHandlerBase>; //Pointer type
 
     /**
      * @brief Default Constructor

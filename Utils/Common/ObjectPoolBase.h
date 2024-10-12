@@ -72,12 +72,12 @@ template<
 public:
     friend class ObjectPoolElemDeleter<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType>;
 
-    typedef ObjectPoolElemDeleter<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType> ObjectDeleter;
+    using ObjectDeleter = ObjectPoolElemDeleter<KeyType, ElemType, ElemTraitType, SelfType, FactoryType, ClearFuncType, LoggerName, FindPredType, GetPredType>;
 
     /**
      * Defines an alias representing the pointer whitch is used by caller.
      */
-    typedef std::unique_ptr<ElemType, ObjectDeleter> ptr_t;
+    using ptr_t = std::unique_ptr<ElemType, ObjectDeleter>;
 
     ObjectPoolBase(const ObjectPoolBase&) = delete;
 
@@ -150,7 +150,7 @@ protected:
 
 
 private:
-    typedef struct _ObjectBlocks
+    using ObjectBlocks = struct _ObjectBlocks
     {
         KeyType m_key;  /**< Block key */
 
@@ -159,7 +159,7 @@ private:
         SpinLock<> m_lock;  /**< Thread sync lock */
 
         std::vector<ElemType*> m_objects;   /**< Free objects */
-    } ObjectBlocks; /**< Internal object block type */
+    }; /**< Internal object block type */
 
     std::list<ObjectBlocks> m_blocks;   /**< Internal object blocks */
 

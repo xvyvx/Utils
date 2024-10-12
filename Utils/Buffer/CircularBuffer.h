@@ -6,6 +6,7 @@
 #include <type_traits>
 #include "../Common/CommonHdr.h"
 #include "BufferDescriptor.h"
+#include "LinearBuffer.h"
 
 template<bool IsConst> class CircularBufferIterator;
 
@@ -19,57 +20,57 @@ public:
     /**
      * Defines an alias representing type of the size.
      */
-    typedef std::size_t size_type;
+    using size_type = std::size_t;
 
     /**
      * Defines an alias representing type of the difference.
      */
-    typedef std::ptrdiff_t difference_type;
+    using difference_type = std::ptrdiff_t;
 
     /**
      * Defines an alias representing type of the value.
      */
-    typedef us8 value_type;
+    using value_type = us8;
 
     /**
      * Defines an alias representing the value pointer.
      */
-    typedef us8* pointer;
+    using pointer = us8*;
 
     /**
      * Defines an alias representing the constant pointer
      */
-    typedef const pointer const_pointer;
+    using const_pointer = const pointer;
 
     /**
      * Defines an alias representing the value reference.
      */
-    typedef us8& reference;
+    using reference = us8&;
 
     /**
      * Defines an alias representing the constant value reference.
      */
-    typedef const us8& const_reference;
+    using const_reference = const us8&;
 
     /**
      * Defines an alias representing the iterator.
      */
-    typedef CircularBufferIterator<false> iterator;
+    using iterator = CircularBufferIterator<false>;
 
     /**
      * Defines an alias representing the constant iterator
      */
-    typedef CircularBufferIterator<true> const_iterator;
+    using const_iterator = CircularBufferIterator<true>;
 
     /**
      * Defines an alias representing the reverse iterator
      */
-    typedef std::reverse_iterator<CircularBufferIterator<false>> reverse_iterator;
+    using reverse_iterator = std::reverse_iterator<CircularBufferIterator<false>>;
 
     /**
      * Defines an alias representing the constant reverse iterator
      */
-    typedef std::reverse_iterator<CircularBufferIterator<true>> const_reverse_iterator;
+    using const_reverse_iterator = std::reverse_iterator<CircularBufferIterator<true>>;
 
     /**
      * Constructor
@@ -392,27 +393,27 @@ public:
     /**
     * Defines an alias representing type of the size.
     */
-    typedef CircularBuffer::size_type size_type;
+    using size_type = CircularBuffer::size_type;
 
     /**
     * Defines an alias representing type of the difference.
     */
-    typedef CircularBuffer::difference_type difference_type;
+    using difference_type = CircularBuffer::difference_type;
 
     /**
     * Defines an alias representing type of the value.
     */
-    typedef CircularBuffer::value_type value_type;
+    using value_type = CircularBuffer::value_type;
 
     /**
     * Defines an alias representing type of the pointer.
     */
-    typedef typename std::conditional<IsConst, CircularBuffer::const_pointer, CircularBuffer::pointer>::type pointer;
+    using pointer = typename std::conditional<IsConst, CircularBuffer::const_pointer, CircularBuffer::pointer>::type;
 
     /**
     * Defines an alias representing type of the reference.
     */
-    typedef typename std::conditional<IsConst, CircularBuffer::const_reference, CircularBuffer::reference>::type reference;
+    using reference = typename std::conditional<IsConst, CircularBuffer::const_reference, CircularBuffer::reference>::type;
 
     /**
     * Constructor
@@ -587,15 +588,15 @@ namespace std
     */
     template<bool IsConst> struct iterator_traits<CircularBufferIterator<IsConst>>
     {
-        typedef typename CircularBufferIterator<IsConst>::difference_type difference_type;
+        using difference_type = typename CircularBufferIterator<IsConst>::difference_type;
 
-        typedef typename CircularBufferIterator<IsConst>::value_type value_type;
+        using value_type = typename CircularBufferIterator<IsConst>::value_type;
 
-        typedef typename CircularBufferIterator<IsConst>::pointer pointer;
+        using pointer = typename CircularBufferIterator<IsConst>::pointer;
 
-        typedef typename CircularBufferIterator<IsConst>::reference reference;
+        using reference = typename CircularBufferIterator<IsConst>::reference;
 
-        typedef std::random_access_iterator_tag iterator_category;
+        using iterator_category = std::random_access_iterator_tag;
     };
 }
 

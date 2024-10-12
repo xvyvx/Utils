@@ -17,57 +17,57 @@ public:
     /**
      * Defines an alias representing type of the value.
      */
-    typedef us8 value_type;
+    using value_type = us8;
 
     /**
      * Defines an alias representing type of the size.
      */
-    typedef size_t size_type;
+    using size_type = size_t;
 
     /**
      * Defines an alias representing type of the difference.
      */
-    typedef ptrdiff_t difference_type;
+    using difference_type = ptrdiff_t;
 
     /**
      * Defines an alias representing the value reference.
      */
-    typedef value_type& reference;
+    using reference = value_type&;
 
     /**
      * Defines an alias representing the constant value reference.
      */
-    typedef const value_type& const_reference;
+    using const_reference = const value_type&;
 
     /**
      * Defines an alias representing the value pointer.
      */
-    typedef value_type* pointer;
+    using pointer = value_type*;
 
     /**
      * Defines an alias representing the constant value pointer.
      */
-    typedef const value_type* const_pointer;
+    using const_pointer = const value_type*;
 
     /**
      * Defines an alias representing the iterator.
      */
-    typedef pointer iterator;
+    using iterator = pointer;
 
     /**
      * Defines an alias representing the constant iterator.
      */
-    typedef const_pointer const_iterator;
+    using const_iterator = const_pointer;
 
     /**
      * Defines an alias representing the reverse iterator.
      */
-    typedef std::reverse_iterator<pointer> reverse_iterator;
+    using reverse_iterator = std::reverse_iterator<pointer>;
 
     /**
      * Defines an alias representing the constant reverse iterator.
      */
-    typedef std::reverse_iterator<const_pointer> const_reverse_iterator;
+    using const_reverse_iterator = std::reverse_iterator<const_pointer>;
 
     /**
      * Constructor

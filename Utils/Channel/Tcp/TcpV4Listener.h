@@ -6,7 +6,7 @@
 
 extern const char TcpV4ListenerLoggerName[];
 
-typedef void TcpListenerAcceptFunc(std::shared_ptr<boost::asio::ip::tcp::endpoint>&, std::shared_ptr<boost::asio::ip::tcp::socket>&);
+using TcpListenerAcceptFunc = void (std::shared_ptr<boost::asio::ip::tcp::endpoint> &, std::shared_ptr<boost::asio::ip::tcp::socket> &);
 
 void TcpListenerAcceptEntry(std::shared_ptr<boost::asio::ip::tcp::endpoint> &remoteEndPoint, std::shared_ptr<boost::asio::ip::tcp::socket> &sock);
 
@@ -15,7 +15,7 @@ UTILS_EXPORTS_API void SetListenerAcceptFunc(TcpListenerAcceptFunc *func);
 /**
  * TCP v4 listener.
  */
-typedef TcpListenerBase<TcpV4Traits, TcpListenerAcceptFunc, TcpListenerAcceptEntry, TcpV4ListenerLoggerName> TcpV4Listener;
+using TcpV4Listener = TcpListenerBase<TcpV4Traits, TcpListenerAcceptFunc, TcpListenerAcceptEntry, TcpV4ListenerLoggerName>;
 
 extern template class UTILS_DECL_API TcpListenerBase<TcpV4Traits, TcpListenerAcceptFunc, TcpListenerAcceptEntry, TcpV4ListenerLoggerName>;
 

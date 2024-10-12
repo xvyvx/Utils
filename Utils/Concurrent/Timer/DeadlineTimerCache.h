@@ -17,7 +17,7 @@ public:
  * @brief Deadline Timer cache impletemented by @ref TimerCacheBase.
  * 
  */
-typedef TimerCacheBase<boost::asio::deadline_timer, DeadlineTimerCacheFactory, DeadlineTimerCacheLoggerName> DeadlineTimerCache;
+using DeadlineTimerCache = TimerCacheBase<boost::asio::deadline_timer, DeadlineTimerCacheFactory, DeadlineTimerCacheLoggerName>;
 
 extern template class UTILS_DECL_API ObjectPoolBase
 <

@@ -17,7 +17,7 @@ public:
     /**
      * Defines an alias representing type of the base class.
      */
-    typedef StreamChannelBase<ProtocolTraits, LoggerName> BaseType;
+    using BaseType = StreamChannelBase<ProtocolTraits, LoggerName>;
 
     /**
      * Constructor

@@ -107,7 +107,7 @@ DWORD WinSrvHelper::StopDependentServices(SC_HANDLE scmHandle, SC_HANDLE srvHand
     }
 
     // Allocate a buffer for the dependencies.
-    auto deleter = std::bind(::HeapFree, GetProcessHeap(), 0, std::placeholders::_1);
+    auto deleter = [](void *ptr) { ::HeapFree(GetProcessHeap(), 0, ptr); };
     std::unique_ptr<ENUM_SERVICE_STATUSA, decltype(deleter)> tempDependencies(
         reinterpret_cast<ENUM_SERVICE_STATUSA*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwBytesNeeded))
         , deleter);

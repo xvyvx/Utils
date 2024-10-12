@@ -45,12 +45,12 @@ BOOST_AUTO_TEST_CASE(DeadlineTimerCacheTest)
     BOOST_TEST(timerNotifyEvt.TimedWait(50), "Wait deadline timer event timeout with functor.");
     timerNotifyEvt.Reset();
     DeadlineTimerCache::Instance().QueueThreadPoolWorkItemAfter(boost::posix_time::milliseconds(30)
-        , std::bind(&TimerTimeoutObject::TimeoutHandler, obj, std::placeholders::_1));
+        , [obj](const boost::system::error_code &err) mutable { obj.TimeoutHandler(err); });
     BOOST_TEST(timerNotifyEvt.TimedWait(50), "Wait deadline timer event timeout with methord.");
     timerNotifyEvt.Reset();
     std::unique_ptr<TimerTimeoutObject> objPtr(new TimerTimeoutObject());
     DeadlineTimerCache::Instance().QueueThreadPoolWorkItemAfter(boost::posix_time::milliseconds(30)
-        , std::bind(&TimerTimeoutObject::TimeoutHandler, std::move(objPtr), std::placeholders::_1));
+        , [ptr = std::move(objPtr)](const boost::system::error_code &err) mutable { ptr->TimeoutHandler(err); });
     BOOST_TEST(timerNotifyEvt.TimedWait(50), "Wait deadline timer event timeout with object pointer methord.");
     timerNotifyEvt.Reset();
     DeadlineTimerCache::Instance().QueueThreadPoolWorkItemAfter(boost::posix_time::milliseconds(30)

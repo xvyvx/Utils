@@ -36,12 +36,12 @@ public:
     /**
      * Defines an alias representing type of the base class.
      */
-    typedef std::enable_shared_from_this<TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>> BaseType;
+    using BaseType = std::enable_shared_from_this<TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>>;
 
     /**
      * Defines an alias representing the pointer to self.
      */
-    typedef std::shared_ptr<TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>> ptr_t;
+    using ptr_t = std::shared_ptr<TcpListenerBase<ProtocolTraits, AcceptFunc, AcceptFunction, LoggerName>>;
 
     /**
      * Gets the global instance.

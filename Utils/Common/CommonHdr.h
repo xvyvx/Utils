@@ -42,54 +42,54 @@
 /**
  * Defines an alias representing the unsigned byte.
  */
-typedef unsigned char us8;
+using us8 = unsigned char;
 
 /**
  * Defines an alias representing the s signed byte.
  */
-typedef signed char s8;
+using s8 = signed char;
 
 /**
  * Defines an alias representing the unsigned two-bytes.
  */
-typedef unsigned short us16;
+using us16 = unsigned short;
 
 /**
  * Defines an alias representing the signed two-bytes.
  */
-typedef signed short s16;
+using s16 = short;
 
 /**
  * Defines an alias representing the unsigned four-bytes.
  */
-typedef unsigned int us32;
+using us32 = unsigned int;
 
 /**
  * Defines an alias representing the signed four-bytes.
  */
-typedef signed int s32;
+using s32 = int;
 
 /**
  * Defines an alias representing the unsigned eight-bytes.
  */
-typedef unsigned long long us64;
+using us64 = unsigned long long;
 
 /**
  * Defines an alias representing the signed eight-bytes.
  */
-typedef signed long long s64;
+using s64 = long long;
 
 /**
  * Defines an alias representing the float four-bytes.
  * 
  */
-typedef float f32;
+using f32 = float;
 
 /**
  * Defines an alias representing the float eight-bytes.
  * 
  */
-typedef double f64;
+using f64 = double;
 
 #define IS_LITTLE_ENDIAN
 

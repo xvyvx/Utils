@@ -13,7 +13,7 @@ public:
     /**
      * Defines an alias representing type of the basic stream.
      */
-    typedef boost::asio::serial_port StreamType;
+    using StreamType = boost::asio::serial_port;
 };
 
 #endif /* SERIALPORTTRAITS_H */

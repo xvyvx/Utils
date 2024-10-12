@@ -13,12 +13,12 @@ public:
     /**
      * Defines an alias representing type of the address.
      */
-    typedef boost::asio::ip::address_v4 AddressType;
+    using AddressType = boost::asio::ip::address_v4;
 
     /**
      * Defines an alias representing type of the basic stream.
      */
-    typedef boost::asio::ip::tcp::socket StreamType;
+    using StreamType = boost::asio::ip::tcp::socket;
 
     /**
      * Gets the protocol representation.

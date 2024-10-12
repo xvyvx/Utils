@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(LinearBufferCacheNoTrivialWrapperTest)
     LinearBufferCache::Instance().AddToObjectPool(8, 100);
     LinearBufferCache::Instance().AddToObjectPool(1024, 100);
     size_t objCount = 0;
-    LinearBufferNoTrivialWrapper<TestAlloc> temp = LinearBufferCacheHelper::AllocNoTrivialVectorFromPool<TestAlloc>(
+    LinearBufferNotTrivialWrapper<TestAlloc> temp = LinearBufferCacheHelper::AllocVectorFromPool<TestAlloc>(
         10);
     BOOST_TEST((temp == true));
     for(size_t i = 0; i < 10; ++i)
@@ -120,13 +120,13 @@ BOOST_AUTO_TEST_CASE(LinearBufferCacheNoTrivialWrapperTest)
         BOOST_TEST((objCount == i + 1 && temp[i].m_val32 == i));
     }
     BOOST_TEST((temp.Count() == 10));
-    LinearBufferNoTrivialWrapper<TestAlloc> temp2 = LinearBufferCacheHelper::AllocNoTrivialVectorFromPool<TestAlloc>(
+    LinearBufferNotTrivialWrapper<TestAlloc> temp2 = LinearBufferCacheHelper::AllocVectorFromPool<TestAlloc>(
         4096);
     BOOST_TEST((temp2 == false));
     temp2 = std::move(temp);
     BOOST_TEST((temp == false && temp2 == true));
     {
-        LinearBufferNoTrivialWrapper<TestAlloc> temp3 = std::move(temp2);
+        LinearBufferNotTrivialWrapper<TestAlloc> temp3 = std::move(temp2);
         BOOST_TEST((temp2 == false && temp3 == true));
     }
     BOOST_TEST(objCount == 0);

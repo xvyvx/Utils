@@ -4,6 +4,7 @@
 #include <memory>
 #include "IAsyncChannelHandler.h"
 #include "../../Buffer/BufferDescriptor.h"
+#include "../../Buffer/LinearBuffer.h"
 
 /**
  * The interface of asynchronous communication channels.
@@ -14,7 +15,7 @@ public:
     /**
      * Defines an alias representing the std::shared_ptr<IAsyncChannel>.
      */
-    typedef std::shared_ptr<IAsyncChannel> ptr_t;
+    using ptr_t = std::shared_ptr<IAsyncChannel>;
 
     /**
      * Default constructor.

@@ -23,7 +23,10 @@ template<typename StreamTraits, const char *LoggerName> void StreamChannelBase<S
         bufSeq.push_back(boost::asio::buffer(bufs[i].m_beg, bufs[i].m_size));
     }
     SpinLock<>::ScopeLock lock(m_lock);
-    m_stream->async_read_some(std::move(bufSeq), std::bind(&IAsyncChannelHandler::EndRead, handler, std::placeholders::_1, std::placeholders::_2, ctx));
+    m_stream->async_read_some(std::move(bufSeq), [handler = handler, ctx = ctx](const boost::system::error_code &err, std::size_t bytesTransferred)
+        {
+            handler->EndRead(err, bytesTransferred, ctx);
+        });
 }
 
 template<typename StreamTraits, const char *LoggerName> void StreamChannelBase<StreamTraits, LoggerName>::AsyncWrite(const std::shared_ptr<LinearBuffer> &buf
@@ -39,8 +42,12 @@ template<typename StreamTraits, const char *LoggerName> void StreamChannelBase<S
     {
         std::unique_ptr<WrReq> req(new WrReq{ handler, buf, sendOffset, sendLen, ctx, nullptr });
         m_lastWrReq = req.get();
-        boost::asio::async_write(*m_stream, boost::asio::buffer(buf->data() + sendOffset, sendLen), std::bind(&StreamChannelBase<StreamTraits, LoggerName>::EndWrite
-            , StreamChannelBase<StreamTraits, LoggerName>::shared_from_this(), std::move(req), std::placeholders::_1, std::placeholders::_2));
+        boost::asio::async_write(*m_stream, boost::asio::buffer(buf->data() + sendOffset, sendLen)
+            , [self = StreamChannelBase<StreamTraits, LoggerName>::shared_from_this(), req = std::move(req)]
+            (const boost::system::error_code &err, std::size_t bytesTransferred) mutable
+            {
+                self->EndWrite(req, err, bytesTransferred);
+            });
     }
 }
 
@@ -54,8 +61,11 @@ template<typename StreamTraits, const char *LoggerName> void StreamChannelBase<S
             us8* buffer = wrReq->m_next->m_buf->data() + wrReq->m_next->m_sendOffset;
             size_t bufferSize = wrReq->m_next->m_sendLen;
             boost::asio::async_write(*m_stream, boost::asio::buffer(buffer, bufferSize)
-                , std::bind(&StreamChannelBase<StreamTraits, LoggerName>::EndWrite, StreamChannelBase<StreamTraits, LoggerName>::shared_from_this(), std::move(wrReq->m_next)
-                , std::placeholders::_1, std::placeholders::_2));
+                , [self = StreamChannelBase<StreamTraits, LoggerName>::shared_from_this(), req = std::move(wrReq->m_next)]
+                (const boost::system::error_code &err, std::size_t bytesTransferred) mutable
+                {
+                    self->EndWrite(req, err, bytesTransferred);
+                });
         }
         else
         {

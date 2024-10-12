@@ -11,7 +11,7 @@ namespace MetaPrograme {
 namespace List {
 namespace Algorithms {
 
-typedef int ListIndexType;
+using ListIndexType = int;
 
 template<ListIndexType Index, typename First, typename... Other> class At
 {
@@ -41,8 +41,8 @@ public:
     >::type;
 };
 
-#ifndef LIST_SEARCH_ALGORITHM_INSTANTIATE_LIMIT
-#define LIST_SEARCH_ALGORITHM_INSTANTIATE_LIMIT 60
+#if __GNUC__ < 12 && !defined(LIST_SEARCH_ALGORITHM_INSTANTIATE_LIMIT)
+    #define LIST_SEARCH_ALGORITHM_INSTANTIATE_LIMIT 60
 #endif
 
 template<typename SearchElement, typename... Elements>
@@ -54,7 +54,11 @@ class Search
      * 标准修订记录：http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#1315
      * 暂时尝试以一个固定的小范围上限终止编译器的递归实例化
      */
-    , LIST_SEARCH_ALGORITHM_INSTANTIATE_LIMIT/*sizeof...(Elements) - 1*/
+#if __GNUC__ < 12
+    , LIST_SEARCH_ALGORITHM_INSTANTIATE_LIMIT
+#else
+    , sizeof...(Elements) - 1
+#endif
     , Elements...
 >
 {
